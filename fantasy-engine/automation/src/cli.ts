@@ -37,7 +37,7 @@ program
 program
   .command('thursday')
   .description('Execute Thursday pre-game lineup optimization')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .option('--league <id>', 'League ID override')
   .option('--team <id>', 'Team ID override')
   .action(async (options) => {
@@ -74,7 +74,7 @@ program
 program
   .command('sunday')
   .description('Execute Sunday final lineup check')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .action(async (options) => {
     try {
       console.log('🔍 Starting Sunday Final Check...');
@@ -99,7 +99,7 @@ program
 program
   .command('monday')
   .description('Execute Monday post-game analysis and waiver prep')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .action(async (options) => {
     try {
       console.log('📈 Starting Monday Analysis...');
@@ -125,7 +125,7 @@ program
 program
   .command('tuesday')
   .description('Execute Tuesday waiver wire analysis')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .action(async (options) => {
     try {
       console.log('🎯 Starting Tuesday Waiver Analysis...');
@@ -152,7 +152,7 @@ program
   .command('workflow')
   .description('Execute custom AI workflow')
   .requiredOption('--task <task>', 'Workflow task type')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .option('--prompt <text>', 'Custom AI prompt')
   .action(async (options) => {
     try {
@@ -221,7 +221,7 @@ program
   .command('intelligence')
   .description('Execute Phase 4 advanced intelligence analysis')
   .option('--mode <mode>', 'Intelligence mode: full, realtime, learning, analytics, seasonal', 'full')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .action(async (options) => {
     try {
       console.log('🧠 Starting Phase 4 Advanced Intelligence...');
