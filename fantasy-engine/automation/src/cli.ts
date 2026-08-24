@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { program } from 'commander';
 import dotenv from 'dotenv';
+import { espnApi } from '@fantasy-ai/shared';
 import { initializeEnvironment } from './utils/environment.js';
 import { executeThursdayOptimization } from './commands/thursday.js';
 import { executeSundayCheck } from './commands/sunday.js';
@@ -17,6 +18,18 @@ program
   .name('fantasy-ai')
   .description('Fantasy Football AI Manager - Phase 4 Advanced Intelligence')
   .version('4.0.0');
+
+// Every command needs ESPN cookies on the shared espnApi singleton before it
+// can call the ESPN API - only `init` and `intelligence` used to set them,
+// so thursday/sunday/monday/tuesday/workflow/roster silently ran with no
+// auth cookie at all. Set them once here for every command.
+program.hook('preAction', () => {
+  const ESPN_S2 = process.env.ESPN_S2;
+  const ESPN_SWID = process.env.ESPN_SWID;
+  if (ESPN_S2 && ESPN_SWID) {
+    espnApi.setCookies({ espn_s2: ESPN_S2, swid: ESPN_SWID });
+  }
+});
 
 // Initialize environment (ESPN cookies, LLM config)
 program
