@@ -3,6 +3,7 @@ import { ClaudeProvider } from './providers/claude.js';
 import { OpenAIProvider } from './providers/openai.js';
 import { PerplexityProvider } from './providers/perplexity.js';
 import { GeminiProvider } from './providers/gemini.js';
+import { OpenRouterProvider } from './providers/openrouter.js';
 import { costMonitor } from '../costMonitor.js';
 
 export class LLMManager {
@@ -32,6 +33,9 @@ export class LLMManager {
           break;
         case 'gemini':
           provider = new GeminiProvider(config);
+          break;
+        case 'openrouter':
+          provider = new OpenRouterProvider(config);
           break;
         default:
           throw new Error(`Unsupported provider: ${config.provider}`);
@@ -88,6 +92,9 @@ export class LLMManager {
         break;
       case 'gemini':
         provider = new GeminiProvider(tempConfig);
+        break;
+      case 'openrouter':
+        provider = new OpenRouterProvider(tempConfig);
         break;
       default:
         return [];

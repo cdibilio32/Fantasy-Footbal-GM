@@ -27,6 +27,15 @@ export class LLMConfigManager {
   getAvailableProviders(): LLMConfigOption[] {
     return [
       {
+        provider: 'openrouter',
+        name: 'OpenRouter',
+        models: ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'anthropic/claude-3.5-sonnet', 'google/gemini-2.0-flash-exp'],
+        description: 'Unified API gateway to many open and closed models - currently configured to use OpenAI\'s open-weight gpt-oss-20b',
+        pricing_note: 'Pay-per-use: ~$0.05-0.20 per million tokens for gpt-oss-20b',
+        setup_instructions: 'Get API key from https://openrouter.ai/keys',
+        env_variables: ['OPENROUTER_API_KEY', 'OPENROUTER_MODEL']
+      },
+      {
         provider: 'claude',
         name: 'Claude (Anthropic)',
         models: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'],
@@ -87,6 +96,17 @@ export class LLMConfigManager {
   }
 
   private loadFromEnvironment(): LLMConfig | null {
+    // Check for OpenRouter
+    if (process.env.OPENROUTER_API_KEY) {
+      return {
+        provider: 'openrouter',
+        model: process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b',
+        api_key: process.env.OPENROUTER_API_KEY,
+        max_tokens: parseInt(process.env.OPENROUTER_MAX_TOKENS || '4000'),
+        temperature: parseFloat(process.env.OPENROUTER_TEMPERATURE || '0.7')
+      };
+    }
+
     // Check for Claude
     if (process.env.CLAUDE_API_KEY) {
       return {

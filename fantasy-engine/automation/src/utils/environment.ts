@@ -54,16 +54,17 @@ export function validateEnvironment(): {
   const optional = [
     'LEAGUE_1_ID',
     'LEAGUE_1_TEAM_ID',
+    'OPENROUTER_API_KEY',
     'GEMINI_API_KEY',
     'CLAUDE_API_KEY',
     'OPENAI_API_KEY'
   ];
-  
+
   const missing = required.filter(env => !process.env[env]);
   const hasLLM = optional.slice(2).some(env => process.env[env]); // Check for any LLM key
-  
+
   if (!hasLLM) {
-    missing.push('At least one LLM API key (GEMINI_API_KEY, CLAUDE_API_KEY, or OPENAI_API_KEY)');
+    missing.push('At least one LLM API key (OPENROUTER_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY, or OPENAI_API_KEY)');
   }
   
   return {
@@ -74,7 +75,7 @@ export function validateEnvironment(): {
 
 export function getCurrentWeek(): number {
   const now = new Date();
-  const seasonStart = new Date('2025-09-04'); // 2025 NFL season start
+  const seasonStart = new Date(now.getFullYear(), 8, 1); // September 1 of the current NFL season
   const timeDiff = now.getTime() - seasonStart.getTime();
   const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
   
