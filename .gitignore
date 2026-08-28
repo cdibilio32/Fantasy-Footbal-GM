@@ -62,6 +62,21 @@ cost-log.json
 # Runtime performance-tracking data written by the automation CLI
 fantasy-engine/shared/data/performance/
 
+# Per-run output files written by the automation CLI (regenerated every run)
+fantasy-engine/automation/thursday_results.json
+fantasy-engine/automation/sunday_results.json
+fantasy-engine/automation/monday_results.json
+fantasy-engine/automation/tuesday_results.json
+fantasy-engine/automation/phase4_results.json
+fantasy-engine/automation/urgent_decisions.json
+fantasy-engine/automation/learning_patterns.json
+fantasy-engine/automation/seasonal_intelligence.json
+fantasy-engine/automation/decision_history.json
+fantasy-engine/automation/analytics_dashboard*.json
+fantasy-engine/automation/analytics_dashboard_*.html
+fantasy-engine/automation/system-metrics.json
+fantasy-engine/automation/health-report.txt
+
 # MCP server config with credentials (SECURITY CRITICAL)
 claude-config-both-leagues.json
 claude-desktop-config.json
