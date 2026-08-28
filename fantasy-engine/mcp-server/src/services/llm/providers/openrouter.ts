@@ -12,13 +12,14 @@ export class OpenRouterProvider extends OpenAIProvider {
     try {
       if (!config.api_key) return false;
 
-      // Reasoning models (like gpt-oss-20b) spend part of max_tokens on hidden
-      // reasoning before the visible answer, so the base class's 10-token probe
-      // always comes back empty. Give it enough room to actually respond.
+      // Reasoning models (like deepseek-v4-flash or gpt-oss-20b) spend part of
+      // max_tokens on hidden reasoning before the visible answer, so the base
+      // class's 10-token probe always comes back empty. Give it enough room
+      // to actually respond.
       const testMessages: LLMMessage[] = [
         { role: 'user', content: 'Reply with the single word OK.' }
       ];
-      const response = await this.chat(testMessages, { max_tokens: 50 });
+      const response = await this.chat(testMessages, { max_tokens: 200 });
       return response.content.trim().length > 0;
     } catch (error) {
       console.error(`${this.name} config validation failed:`, error);
@@ -32,6 +33,7 @@ export class OpenRouterProvider extends OpenAIProvider {
 
   get models(): string[] {
     return [
+      'deepseek/deepseek-v4-flash',
       'openai/gpt-oss-20b',
       'openai/gpt-oss-120b',
       'anthropic/claude-3.5-sonnet',
@@ -43,11 +45,12 @@ export class OpenRouterProvider extends OpenAIProvider {
   getPricing(): { input_cost_per_token: number; output_cost_per_token: number; currency: string } {
     // Pricing per OpenRouter (USD per million tokens, converted to per token)
     const pricingMap: Record<string, any> = {
+      'deepseek/deepseek-v4-flash': { input: 0.0886, output: 0.177212 },
       'openai/gpt-oss-20b': { input: 0.05, output: 0.20 },
       'openai/gpt-oss-120b': { input: 0.15, output: 0.60 }
     };
 
-    const pricing = pricingMap[this.config.model] || pricingMap['openai/gpt-oss-20b'];
+    const pricing = pricingMap[this.config.model] || pricingMap['deepseek/deepseek-v4-flash'];
 
     return {
       input_cost_per_token: pricing.input / 1000000,
