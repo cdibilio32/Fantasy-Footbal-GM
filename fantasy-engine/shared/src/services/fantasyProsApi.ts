@@ -602,8 +602,9 @@ export class FantasyProsApiService {
       // ESPN position filter mapping
       const positionFilter = position === 'ALL' ? '' : `&pos=${this.mapPositionForESPN(position)}`;
       
-      // Current season (2025) - using same pattern as main ESPN API
-      const espnUrl = `https://fantasy.espn.com/apis/v3/games/ffl/seasons/2025/segments/0/leaguedefaults/3?view=kona_player_info&scoringPeriodId=0&filters=%7B%22players%22:%7B%22limit%22:300%7D%7D${positionFilter}`;
+      // Current season (override with ESPN_SEASON_YEAR) - using same pattern as main ESPN API
+      const seasonYear = process.env.ESPN_SEASON_YEAR || '2025';
+      const espnUrl = `https://fantasy.espn.com/apis/v3/games/ffl/seasons/${seasonYear}/segments/0/leaguedefaults/3?view=kona_player_info&scoringPeriodId=0&filters=%7B%22players%22:%7B%22limit%22:300%7D%7D${positionFilter}`;
       
       console.log(`🔗 ESPN fallback URL: ${espnUrl}`);
       

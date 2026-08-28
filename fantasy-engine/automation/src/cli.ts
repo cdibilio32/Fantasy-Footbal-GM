@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { program } from 'commander';
 import dotenv from 'dotenv';
+import { espnApi } from '@fantasy-ai/shared';
 import { initializeEnvironment } from './utils/environment.js';
 import { executeThursdayOptimization } from './commands/thursday.js';
 import { executeSundayCheck } from './commands/sunday.js';
@@ -17,6 +18,18 @@ program
   .name('fantasy-ai')
   .description('Fantasy Football AI Manager - Phase 4 Advanced Intelligence')
   .version('4.0.0');
+
+// Every command needs ESPN cookies on the shared espnApi singleton before it
+// can call the ESPN API - only `init` and `intelligence` used to set them,
+// so thursday/sunday/monday/tuesday/workflow/roster silently ran with no
+// auth cookie at all. Set them once here for every command.
+program.hook('preAction', () => {
+  const ESPN_S2 = process.env.ESPN_S2;
+  const ESPN_SWID = process.env.ESPN_SWID;
+  if (ESPN_S2 && ESPN_SWID) {
+    espnApi.setCookies({ espn_s2: ESPN_S2, swid: ESPN_SWID });
+  }
+});
 
 // Initialize environment (ESPN cookies, LLM config)
 program
@@ -37,7 +50,7 @@ program
 program
   .command('thursday')
   .description('Execute Thursday pre-game lineup optimization')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .option('--league <id>', 'League ID override')
   .option('--team <id>', 'Team ID override')
   .action(async (options) => {
@@ -74,7 +87,7 @@ program
 program
   .command('sunday')
   .description('Execute Sunday final lineup check')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .action(async (options) => {
     try {
       console.log('🔍 Starting Sunday Final Check...');
@@ -99,7 +112,7 @@ program
 program
   .command('monday')
   .description('Execute Monday post-game analysis and waiver prep')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .action(async (options) => {
     try {
       console.log('📈 Starting Monday Analysis...');
@@ -125,7 +138,7 @@ program
 program
   .command('tuesday')
   .description('Execute Tuesday waiver wire analysis')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .action(async (options) => {
     try {
       console.log('🎯 Starting Tuesday Waiver Analysis...');
@@ -152,7 +165,7 @@ program
   .command('workflow')
   .description('Execute custom AI workflow')
   .requiredOption('--task <task>', 'Workflow task type')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .option('--prompt <text>', 'Custom AI prompt')
   .action(async (options) => {
     try {
@@ -221,7 +234,7 @@ program
   .command('intelligence')
   .description('Execute Phase 4 advanced intelligence analysis')
   .option('--mode <mode>', 'Intelligence mode: full, realtime, learning, analytics, seasonal', 'full')
-  .option('--week <number>', 'NFL week number', '1')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
   .action(async (options) => {
     try {
       console.log('🧠 Starting Phase 4 Advanced Intelligence...');

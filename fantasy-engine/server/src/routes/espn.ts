@@ -26,8 +26,8 @@ router.get('/league/:leagueId', async (req: Request, res: Response) => {
       });
     }
     
-    // Use 2025 season for current fantasy football season
-    const year = 2025;
+    // Fantasy football season year (override with ESPN_SEASON_YEAR)
+    const year = parseInt(process.env.ESPN_SEASON_YEAR || '2025', 10);
     const url = `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/${year}/segments/0/leagues/${leagueId}`;
     
     // Clean the cookies

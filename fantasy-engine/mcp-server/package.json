@@ -14,7 +14,7 @@
   "dependencies": {
     "@fantasy-ai/shared": "file:../shared",
     "@modelcontextprotocol/sdk": "^1.17.4",
-    "axios": "^1.11.0",
+    "axios": "^1.19.0",
     "cheerio": "^1.1.2",
     "dotenv": "^16.4.7"
   },

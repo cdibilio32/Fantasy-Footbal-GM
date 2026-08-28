@@ -10,12 +10,21 @@ export class LLMConfigManager {
     const claudeKey = process.env.CLAUDE_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
     const perplexityKey = process.env.PERPLEXITY_API_KEY;
-    
-    // Primary provider preference from env or default to gemini
-    const primaryProvider = (process.env.PRIMARY_LLM_PROVIDER || 'gemini') as 'gemini' | 'claude' | 'openai' | 'perplexity';
-    
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
+
+    // Primary provider preference from env or default to openrouter
+    const primaryProvider = (process.env.PRIMARY_LLM_PROVIDER || 'openrouter') as 'gemini' | 'claude' | 'openai' | 'perplexity' | 'openrouter';
+
     // Create config for primary provider if key exists
-    if (primaryProvider === 'gemini' && geminiKey) {
+    if (primaryProvider === 'openrouter' && openrouterKey) {
+      return {
+        provider: 'openrouter',
+        model: process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b',
+        api_key: openrouterKey,
+        max_tokens: 1000,
+        temperature: 0.7
+      };
+    } else if (primaryProvider === 'gemini' && geminiKey) {
       return {
         provider: 'gemini',
         model: 'gemini-2.0-flash-exp',
@@ -50,7 +59,15 @@ export class LLMConfigManager {
     }
     
     // Fallback to any available provider
-    if (geminiKey) {
+    if (openrouterKey) {
+      return {
+        provider: 'openrouter',
+        model: process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b',
+        api_key: openrouterKey,
+        max_tokens: 1000,
+        temperature: 0.7
+      };
+    } else if (geminiKey) {
       return {
         provider: 'gemini',
         model: 'gemini-2.0-flash-exp',
@@ -84,7 +101,7 @@ export class LLMConfigManager {
       };
     }
     
-    throw new Error('No LLM API keys found in environment variables (GEMINI_API_KEY, CLAUDE_API_KEY, OPENAI_API_KEY, PERPLEXITY_API_KEY)');
+    throw new Error('No LLM API keys found in environment variables (OPENROUTER_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY, OPENAI_API_KEY, PERPLEXITY_API_KEY)');
   }
 
   private async getLLMManager(): Promise<LLMManager> {
@@ -201,11 +218,11 @@ export class LLMConfigManager {
     }
   }
 
-  async switchProvider(provider: 'gemini' | 'claude' | 'openai' | 'perplexity'): Promise<boolean> {
+  async switchProvider(provider: 'gemini' | 'claude' | 'openai' | 'perplexity' | 'openrouter'): Promise<boolean> {
     try {
       const config = await this.detectAndCreateConfig();
       config.provider = provider;
-      
+
       // Get the correct API key for the provider
       switch (provider) {
         case 'gemini':
@@ -223,6 +240,10 @@ export class LLMConfigManager {
         case 'perplexity':
           config.api_key = process.env.PERPLEXITY_API_KEY || '';
           config.model = 'llama-3.1-sonar-small-128k-online';
+          break;
+        case 'openrouter':
+          config.api_key = process.env.OPENROUTER_API_KEY || '';
+          config.model = process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b';
           break;
       }
       
