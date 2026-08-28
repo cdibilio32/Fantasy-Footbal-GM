@@ -59,6 +59,9 @@ Thumbs.db
 # Cost monitoring logs (contains sensitive usage data)
 cost-log.json
 
+# Runtime performance-tracking data written by the automation CLI
+fantasy-engine/shared/data/performance/
+
 # MCP server config with credentials (SECURITY CRITICAL)
 claude-config-both-leagues.json
 claude-desktop-config.json
