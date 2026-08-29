@@ -7,6 +7,11 @@ import { getMyRoster } from './simple-enhanced.js';
 
 const MEMORIES_PATH = 'memories.md';
 
+const DIGIT_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+function toWords(n: number | string): string {
+  return n.toString().replace(/\d/g, (d: string) => DIGIT_WORDS[parseInt(d)]);
+}
+
 /**
  * Loads standing preferences/corrections accumulated from past user feedback
  * (written by the `remember-feedback` Claude Code skill) so every LLM call
@@ -68,6 +73,32 @@ export async function executeAIWorkflow(args: {
           console.log(`📊 Roster fetched - Starters: ${roster.starters?.length || 0}, Bench: ${roster.bench?.length || 0}`);
           const leagueInfo = await espnApi.getLeagueInfo(league.leagueId);
           console.log(`🏈 League info: ${leagueInfo?.name || 'Unknown'}`);
+
+          // Fetch every other team's roster so trade suggestions can name a real
+          // team and player instead of a hypothetical one.
+          let otherTeams: Array<{ teamId: number; teamName: string; positions: Record<string, { count: number; topPlayers: Array<{ fullName: string; seasonPoints: number; percentOwned: number }> }> }> = [];
+          try {
+            const leagueRosters = await espnApi.getLeagueRosters(league.leagueId);
+            otherTeams = leagueRosters
+              .filter(t => t.teamId !== parseInt(league.teamId))
+              .map(t => {
+                const allPlayers = [...t.starters, ...t.bench];
+                const positions: Record<string, { count: number; topPlayers: Array<{ fullName: string; seasonPoints: number; percentOwned: number }> }> = {};
+                allPlayers.forEach(p => {
+                  if (!positions[p.position]) positions[p.position] = { count: 0, topPlayers: [] };
+                  positions[p.position].count++;
+                  positions[p.position].topPlayers.push(p);
+                });
+                Object.values(positions).forEach(pos => {
+                  pos.topPlayers.sort((a, b) => b.seasonPoints - a.seasonPoints);
+                  pos.topPlayers = pos.topPlayers.slice(0, 2);
+                });
+                return { teamId: t.teamId, teamName: t.teamName, positions };
+              });
+            console.log(`🤝 Fetched ${otherTeams.length} other team rosters for trade-partner matching`);
+          } catch (rosterError: any) {
+            console.warn(`⚠️ Could not fetch other teams' rosters (trade suggestions will be generic): ${rosterError.message}`);
+          }
           
           if (!roster.starters || roster.starters.length === 0) {
             throw new Error(`Empty roster returned for league ${league.leagueId}, team ${league.teamId}`);
@@ -182,7 +213,8 @@ export async function executeAIWorkflow(args: {
             bench: finalBench,
             availablePlayers: rosterWithWaivers.availablePlayers || {},
             injuredReserve: fixedIRPlayers,
-            roster: roster
+            roster: roster,
+            otherTeams
           };
         } catch (error: any) {
           console.error(`❌ ESPN API FAILED for ${league.name || league.leagueId}:`, error.message);
@@ -226,6 +258,30 @@ FANTASY ANALYSIS GUIDELINES:
 • Compare your roster players against these expert rankings and tiers` : '\n⚠️ FantasyPros expert rankings not available - using ESPN data only\n';
 
     const memorySection = loadMemories();
+
+    // Compact per-team positional breakdown of every OTHER roster in the league,
+    // so trade suggestions can name a real team and a real player instead of a
+    // hypothetical one.
+    const otherTeamsSection = leagueData.map(league => {
+      const otherTeams: Array<{ teamId: number; teamName: string; positions: Record<string, { count: number; topPlayers: Array<{ fullName: string; seasonPoints: number; percentOwned: number }> }> }> = (league as any).otherTeams || [];
+      if (otherTeams.length === 0) return '';
+
+      const teamBlocks = otherTeams.map(team => {
+        const positionLines = Object.entries(team.positions).map(([position, data]) => {
+          const topPlayersDesc = data.topPlayers
+            .map(p => `${p.fullName} (${toWords(p.seasonPoints.toFixed(1))} season pts, ${toWords(p.percentOwned)}% owned)`)
+            .join(', ');
+          return `  ${position}: ${toWords(data.count)} rostered — ${topPlayersDesc}`;
+        }).join('\n');
+        return `Team "${team.teamName}" (ESPN Team ID ${toWords(team.teamId)}):\n${positionLines}`;
+      }).join('\n\n');
+
+      return `
+OTHER TEAMS IN ${league.leagueName} (real trade partners — when you suggest a trade, name one of these teams (include its ESPN Team ID) and one of these actual players, never a hypothetical player):
+
+${teamBlocks}
+`;
+    }).join('\n');
 
     const enhancedPrompt = `${prompt}
 
@@ -425,6 +481,7 @@ ${league.availablePlayers ? Object.entries(league.availablePlayers).map(([positi
 ).join('\n') : 'Waiver wire data not available'}
 `).join('\n')}
 ${expertDataSection}
+${otherTeamsSection}
 ${memorySection}
 
 CO-MANAGER REVIEW INSTRUCTIONS:
@@ -468,6 +525,18 @@ DROP [Player Name] ([Position]) - [Why they're droppable to make room]"
 
 Example: "ACTIVATE Cooper Kupp (WR) from IR - Expected to play this week, cleared injury report
 DROP Tyler Lockett (WR) - Inconsistent production and tough schedule"
+
+**TRADE FORMAT:**
+When suggesting a trade, you MUST name a specific team from the "OTHER TEAMS" list above (including its ESPN Team ID) and a specific real player currently on that team's roster — never a hypothetical or generic player, and never a player not listed under that team. Use this format:
+"TRADE [Your Player] ([Position]) to [Team Name] (Team ID [N]) for [Their Player] ([Position])
+WHY: [reasoning about why both sides would do this deal]"
+
+Example: "TRADE Michael Pittman Jr. (WR) to Team "Gridiron Gurus" (Team ID 6) for Kalel Mullings (RB)
+WHY: Gurus are WR-thin and RB-heavy; you get RB depth, they get a starting-caliber WR"
+
+CRITICAL: the player you receive must be copy-pasted verbatim from that team's block under "OTHER TEAMS" — never from the "AVAILABLE WAIVER WIRE/FREE AGENT PLAYERS" list. A player listed there is a zero-owned free agent, not on ANY team's roster, and cannot be traded for. Double-check the player you name actually appears under the specific team you're proposing before writing it down.
+
+If no team in the OTHER TEAMS list has a matching need/surplus for a trade idea, say so explicitly instead of inventing a partner.
 
 Use web_search() to check for any breaking injury news, weather concerns, or lineup changes that could affect my decisions.`;
 
@@ -666,7 +735,12 @@ async function generateResponseWithWebSearchTools(prompt: string): Promise<{ con
       
       const response = await provider.chat(messages, {
         tools: [webSearchTool],
-        max_tokens: 4000,
+        // Reasoning models (e.g. openrouter's gpt-oss-20b) spend part of this
+        // budget on hidden reasoning before the visible answer - with the
+        // larger prompts this workflow now sends (full-league roster data),
+        // 4000 was getting exhausted by reasoning alone, leaving 0 visible
+        // content (finish_reason: "length"). Give it more headroom.
+        max_tokens: 8000,
         temperature: 0.7,
         tool_choice: 'auto'
       });

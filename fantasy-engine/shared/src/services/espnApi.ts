@@ -430,6 +430,77 @@ export class ESPNApiService {
     }
   }
 
+  /**
+   * Fetches every team's roster in the league in a single request, for surfacing
+   * real trade partners/players (the mRoster view already returns all teams -
+   * getTeamRoster just discards everyone but the requested team).
+   * Uses season point totals only (no weekly projection reconciliation) since
+   * this is for identifying positional surplus/need across the league, not
+   * start/sit decisions.
+   */
+  async getLeagueRosters(leagueId: string): Promise<Array<{
+    teamId: number;
+    teamName: string;
+    starters: Array<{ fullName: string; position: string; seasonPoints: number; percentOwned: number }>;
+    bench: Array<{ fullName: string; position: string; seasonPoints: number; percentOwned: number }>;
+  }>> {
+    try {
+      const currentWeek = this.getCurrentWeek();
+      // mRoster alone doesn't populate team.name - combine with mTeam so every
+      // team in the response carries its real league name, not a "Team N" fallback.
+      const response = await this.axios.get(
+        `/seasons/${this.year}/segments/0/leagues/${leagueId}?view=mRoster&view=mTeam`,
+        {
+          params: {
+            scoringPeriodId: currentWeek
+          }
+        }
+      );
+
+      const teams = response.data.teams || [];
+      return teams.map((team: any) => {
+        const entries = team.roster?.entries || [];
+        const starters: Array<{ fullName: string; position: string; seasonPoints: number; percentOwned: number }> = [];
+        const bench: Array<{ fullName: string; position: string; seasonPoints: number; percentOwned: number }> = [];
+
+        entries.forEach((entry: any) => {
+          const playerData = entry.playerPoolEntry?.player || {};
+          const stats = playerData.stats || [];
+          const seasonStat = stats.find((s: any) =>
+            s.statSourceId === 1 && (!s.scoringPeriodId || s.scoringPeriodId === 0)
+          );
+
+          const player = {
+            fullName: playerData.fullName || 'Unknown Player',
+            position: this.getPositionName(playerData.defaultPositionId || 0),
+            seasonPoints: Math.round((seasonStat?.appliedTotal || 0) * 10) / 10,
+            percentOwned: Math.round(playerData.ownership?.percentOwned || 0)
+          };
+
+          if (isBenchPosition(entry.lineupSlotId) || isIRPosition(entry.lineupSlotId)) {
+            bench.push(player);
+          } else if (isStartingPosition(entry.lineupSlotId)) {
+            starters.push(player);
+          } else {
+            bench.push(player);
+          }
+        });
+
+        return {
+          teamId: team.id,
+          teamName: team.name || `Team ${team.id}`,
+          starters,
+          bench
+        };
+      });
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        throw new Error(`ESPN Authentication Failed (401): Cannot access league ${leagueId} rosters. ESPN cookies (ESPN_S2/SWID) are invalid or expired.`);
+      }
+      throw new Error(`ESPN League Rosters Request Failed: ${error.message} - League: ${leagueId}`);
+    }
+  }
+
   async getPlayers(leagueId: string): Promise<Player[]> {
     const currentWeek = this.getCurrentWeek();
     const response = await this.axios.get(
