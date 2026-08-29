@@ -1,8 +1,25 @@
+import { existsSync, readFileSync } from 'fs';
 import { espnApi } from '../services/espnApi.js';
 import { fantasyProsApi } from '../services/fantasyProsApi.js';
 import { llmConfig } from '../config/llm-config.js';
 import { configuredComprehensiveWebData } from '../services/comprehensiveWebData.js';
 import { getMyRoster } from './simple-enhanced.js';
+
+const MEMORIES_PATH = 'memories.md';
+
+/**
+ * Loads standing preferences/corrections accumulated from past user feedback
+ * (written by the `remember-feedback` Claude Code skill) so every LLM call
+ * applies what you've already told it, not just the current roster snapshot.
+ */
+function loadMemories(): string {
+  if (!existsSync(MEMORIES_PATH)) return '';
+
+  const content = readFileSync(MEMORIES_PATH, 'utf-8').trim();
+  if (!content) return '';
+
+  return `\nLEARNED PREFERENCES (from your past feedback — apply these when making recommendations):\n${content}\n`;
+}
 
 export async function executeAIWorkflow(args: {
   task: string;
@@ -208,6 +225,8 @@ FANTASY ANALYSIS GUIDELINES:
 • Smaller Rank Range (bestRank-worstRank) = More expert agreement
 • Compare your roster players against these expert rankings and tiers` : '\n⚠️ FantasyPros expert rankings not available - using ESPN data only\n';
 
+    const memorySection = loadMemories();
+
     const enhancedPrompt = `${prompt}
 
 CURRENT ROSTER DATA:
@@ -406,6 +425,7 @@ ${league.availablePlayers ? Object.entries(league.availablePlayers).map(([positi
 ).join('\n') : 'Waiver wire data not available'}
 `).join('\n')}
 ${expertDataSection}
+${memorySection}
 
 CO-MANAGER REVIEW INSTRUCTIONS:
 Review the roster like we're sitting together planning this week's lineup. Go position by position and tell me who to start, who to bench, and who to pick up from waivers. Be direct and decisive.
