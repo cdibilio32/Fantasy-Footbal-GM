@@ -534,6 +534,8 @@ WHY: [reasoning about why both sides would do this deal]"
 Example: "TRADE Michael Pittman Jr. (WR) to Team "Gridiron Gurus" (Team ID 6) for Kalel Mullings (RB)
 WHY: Gurus are WR-thin and RB-heavy; you get RB depth, they get a starting-caliber WR"
 
+CRITICAL: the player you receive must be copy-pasted verbatim from that team's block under "OTHER TEAMS" — never from the "AVAILABLE WAIVER WIRE/FREE AGENT PLAYERS" list. A player listed there is a zero-owned free agent, not on ANY team's roster, and cannot be traded for. Double-check the player you name actually appears under the specific team you're proposing before writing it down.
+
 If no team in the OTHER TEAMS list has a matching need/surplus for a trade idea, say so explicitly instead of inventing a partner.
 
 Use web_search() to check for any breaking injury news, weather concerns, or lineup changes that could affect my decisions.`;
@@ -733,7 +735,12 @@ async function generateResponseWithWebSearchTools(prompt: string): Promise<{ con
       
       const response = await provider.chat(messages, {
         tools: [webSearchTool],
-        max_tokens: 4000,
+        // Reasoning models (e.g. openrouter's gpt-oss-20b) spend part of this
+        // budget on hidden reasoning before the visible answer - with the
+        // larger prompts this workflow now sends (full-league roster data),
+        // 4000 was getting exhausted by reasoning alone, leaving 0 visible
+        // content (finish_reason: "length"). Give it more headroom.
+        max_tokens: 8000,
         temperature: 0.7,
         tool_choice: 'auto'
       });
