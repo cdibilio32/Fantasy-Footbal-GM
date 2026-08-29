@@ -76,7 +76,7 @@ export async function executeAIWorkflow(args: {
 
           // Fetch every other team's roster so trade suggestions can name a real
           // team and player instead of a hypothetical one.
-          let otherTeams: Array<{ teamName: string; positions: Record<string, { count: number; topPlayers: Array<{ fullName: string; seasonPoints: number; percentOwned: number }> }> }> = [];
+          let otherTeams: Array<{ teamId: number; teamName: string; positions: Record<string, { count: number; topPlayers: Array<{ fullName: string; seasonPoints: number; percentOwned: number }> }> }> = [];
           try {
             const leagueRosters = await espnApi.getLeagueRosters(league.leagueId);
             otherTeams = leagueRosters
@@ -93,7 +93,7 @@ export async function executeAIWorkflow(args: {
                   pos.topPlayers.sort((a, b) => b.seasonPoints - a.seasonPoints);
                   pos.topPlayers = pos.topPlayers.slice(0, 2);
                 });
-                return { teamName: t.teamName, positions };
+                return { teamId: t.teamId, teamName: t.teamName, positions };
               });
             console.log(`🤝 Fetched ${otherTeams.length} other team rosters for trade-partner matching`);
           } catch (rosterError: any) {
@@ -263,7 +263,7 @@ FANTASY ANALYSIS GUIDELINES:
     // so trade suggestions can name a real team and a real player instead of a
     // hypothetical one.
     const otherTeamsSection = leagueData.map(league => {
-      const otherTeams: Array<{ teamName: string; positions: Record<string, { count: number; topPlayers: Array<{ fullName: string; seasonPoints: number; percentOwned: number }> }> }> = (league as any).otherTeams || [];
+      const otherTeams: Array<{ teamId: number; teamName: string; positions: Record<string, { count: number; topPlayers: Array<{ fullName: string; seasonPoints: number; percentOwned: number }> }> }> = (league as any).otherTeams || [];
       if (otherTeams.length === 0) return '';
 
       const teamBlocks = otherTeams.map(team => {
@@ -273,11 +273,11 @@ FANTASY ANALYSIS GUIDELINES:
             .join(', ');
           return `  ${position}: ${toWords(data.count)} rostered — ${topPlayersDesc}`;
         }).join('\n');
-        return `Team "${team.teamName}":\n${positionLines}`;
+        return `Team "${team.teamName}" (ESPN Team ID ${toWords(team.teamId)}):\n${positionLines}`;
       }).join('\n\n');
 
       return `
-OTHER TEAMS IN ${league.leagueName} (real trade partners — when you suggest a trade, name one of these teams and one of these actual players, never a hypothetical player):
+OTHER TEAMS IN ${league.leagueName} (real trade partners — when you suggest a trade, name one of these teams (include its ESPN Team ID) and one of these actual players, never a hypothetical player):
 
 ${teamBlocks}
 `;
@@ -527,11 +527,11 @@ Example: "ACTIVATE Cooper Kupp (WR) from IR - Expected to play this week, cleare
 DROP Tyler Lockett (WR) - Inconsistent production and tough schedule"
 
 **TRADE FORMAT:**
-When suggesting a trade, you MUST name a specific team from the "OTHER TEAMS" list above and a specific real player currently on that team's roster — never a hypothetical or generic player, and never a player not listed under that team. Use this format:
-"TRADE [Your Player] ([Position]) to [Team Name] for [Their Player] ([Position])
+When suggesting a trade, you MUST name a specific team from the "OTHER TEAMS" list above (including its ESPN Team ID) and a specific real player currently on that team's roster — never a hypothetical or generic player, and never a player not listed under that team. Use this format:
+"TRADE [Your Player] ([Position]) to [Team Name] (Team ID [N]) for [Their Player] ([Position])
 WHY: [reasoning about why both sides would do this deal]"
 
-Example: "TRADE Michael Pittman Jr. (WR) to Team "Gridiron Gurus" for Kalel Mullings (RB)
+Example: "TRADE Michael Pittman Jr. (WR) to Team "Gridiron Gurus" (Team ID 6) for Kalel Mullings (RB)
 WHY: Gurus are WR-thin and RB-heavy; you get RB depth, they get a starting-caliber WR"
 
 If no team in the OTHER TEAMS list has a matching need/surplus for a trade idea, say so explicitly instead of inventing a partner.
