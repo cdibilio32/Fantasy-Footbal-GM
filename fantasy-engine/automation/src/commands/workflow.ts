@@ -32,7 +32,10 @@ export async function executeCustomWorkflow(options: WorkflowOptions): Promise<a
     'playoff_prep': 'Analyze playoff positioning and recommend strategies for championship run',
     'trade_analysis': 'Evaluate potential trade opportunities and provide recommendations',
     'streaming_strategy': 'Analyze streaming opportunities for QB, TE, K, and DST positions',
-    'injury_impact': 'Analyze impact of recent injuries on roster and provide contingency plans'
+    'injury_impact': 'Analyze impact of recent injuries on roster and provide contingency plans',
+    'additional_analysis': 'Perform a mid-week roster check-in: review updated injury designations and practice reports, ' +
+      'preview upcoming matchups and game scripts, flag bye-week planning needs for the next 2-3 weeks, and identify ' +
+      'any stash/watch-list players worth monitoring before the waiver period reopens.'
   };
   
   const prompt = options.prompt || defaultPrompts[options.task] || 

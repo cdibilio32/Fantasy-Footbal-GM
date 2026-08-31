@@ -1,0 +1,178 @@
+name: Fantasy Football Weekly Schedule
+
+# Runs the day-specific CLI routine (trading, waivers, additional analysis,
+# lineup) on the matching weekday and archives the JSON output into
+# fantasy-engine/automation/scheduled-results/ so results can be reviewed
+# later without digging through workflow logs.
+#
+# NOTE: GitHub Actions cron runs in UTC. The times below target roughly
+# 11 AM Eastern; during the NFL season that's UTC-4 (EDT, Sep-early Nov)
+# or UTC-5 (EST, Nov-Jan), so actual local time can drift by an hour
+# across that boundary.
+on:
+  schedule:
+    - cron: '0 15 * 9-12,1 1'  # Monday   - trading (trade analysis)
+    - cron: '0 15 * 9-12,1 2'  # Tuesday  - waivers
+    - cron: '0 15 * 9-12,1 3'  # Wednesday - additional analysis
+    - cron: '0 15 * 9-12,1 4'  # Thursday - lineup optimization
+    - cron: '0 15 * 9-12,1 6'  # Saturday - lineup (final check before Sunday games)
+
+  workflow_dispatch:
+    inputs:
+      day:
+        description: 'Which day routine to run'
+        required: true
+        default: 'monday'
+        type: choice
+        options:
+          - monday
+          - tuesday
+          - wednesday
+          - thursday
+          - saturday
+      week:
+        description: 'NFL Week Number (defaults to auto-detected week)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  run-scheduled-task:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'fantasy-engine/automation/package-lock.json'
+
+      - name: Install Dependencies
+        working-directory: fantasy-engine/automation
+        run: npm ci
+
+      - name: Build
+        working-directory: fantasy-engine/automation
+        run: npm run build
+
+      - name: Determine Day & Command
+        id: day
+        run: |
+          if [[ -n "${{ github.event.inputs.day }}" ]]; then
+            DAY="${{ github.event.inputs.day }}"
+          else
+            case "${{ github.event.schedule }}" in
+              '0 15 * 9-12,1 1') DAY="monday" ;;
+              '0 15 * 9-12,1 2') DAY="tuesday" ;;
+              '0 15 * 9-12,1 3') DAY="wednesday" ;;
+              '0 15 * 9-12,1 4') DAY="thursday" ;;
+              '0 15 * 9-12,1 6') DAY="saturday" ;;
+              *) DAY="monday" ;;
+            esac
+          fi
+
+          case "$DAY" in
+            monday)
+              LABEL="trading"
+              CLI_ARGS="workflow --task trade_analysis"
+              RESULT_FILE="trade_analysis_results.json"
+              ;;
+            tuesday)
+              LABEL="waivers"
+              CLI_ARGS="tuesday"
+              RESULT_FILE="tuesday_results.json"
+              ;;
+            wednesday)
+              LABEL="additional-analysis"
+              CLI_ARGS="workflow --task additional_analysis"
+              RESULT_FILE="additional_analysis_results.json"
+              ;;
+            thursday)
+              LABEL="lineup"
+              CLI_ARGS="thursday"
+              RESULT_FILE="thursday_results.json"
+              ;;
+            saturday)
+              LABEL="lineup"
+              CLI_ARGS="sunday"
+              RESULT_FILE="sunday_results.json"
+              ;;
+          esac
+
+          echo "day=$DAY" >> "$GITHUB_OUTPUT"
+          echo "label=$LABEL" >> "$GITHUB_OUTPUT"
+          echo "cli_args=$CLI_ARGS" >> "$GITHUB_OUTPUT"
+          echo "result_file=$RESULT_FILE" >> "$GITHUB_OUTPUT"
+          echo "▶️ Running '$DAY' routine ($LABEL): node dist/cli.js $CLI_ARGS"
+
+      - name: Run ${{ steps.day.outputs.day }} routine
+        working-directory: fantasy-engine/automation
+        env:
+          ESPN_S2: ${{ secrets.ESPN_S2 }}
+          ESPN_SWID: ${{ secrets.ESPN_SWID }}
+          LEAGUE_1_ID: ${{ secrets.LEAGUE_1_ID }}
+          LEAGUE_1_TEAM_ID: ${{ secrets.LEAGUE_1_TEAM_ID }}
+          LEAGUE_1_NAME: ${{ secrets.LEAGUE_1_NAME || 'Main League' }}
+          LEAGUE_2_ID: ${{ secrets.LEAGUE_2_ID }}
+          LEAGUE_2_TEAM_ID: ${{ secrets.LEAGUE_2_TEAM_ID }}
+          LEAGUE_2_NAME: ${{ secrets.LEAGUE_2_NAME || 'Secondary League' }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          PRIMARY_LLM_PROVIDER: ${{ vars.PRIMARY_LLM_PROVIDER || 'openrouter' }}
+          DAILY_COST_LIMIT: ${{ vars.DAILY_COST_LIMIT || '3.00' }}
+          WEEKLY_COST_LIMIT: ${{ vars.WEEKLY_COST_LIMIT || '15.00' }}
+          MONTHLY_COST_LIMIT: ${{ vars.MONTHLY_COST_LIMIT || '50.00' }}
+        run: |
+          WEEK_ARG=""
+          if [[ -n "${{ github.event.inputs.week }}" ]]; then
+            WEEK_ARG="--week ${{ github.event.inputs.week }}"
+          fi
+          node dist/cli.js ${{ steps.day.outputs.cli_args }} $WEEK_ARG
+
+      - name: Archive Results
+        if: always()
+        working-directory: fantasy-engine/automation
+        run: |
+          DAY="${{ steps.day.outputs.day }}"
+          LABEL="${{ steps.day.outputs.label }}"
+          RESULT_FILE="${{ steps.day.outputs.result_file }}"
+          DEST_DIR="scheduled-results/$DAY"
+          mkdir -p "$DEST_DIR"
+
+          if [[ -f "$RESULT_FILE" ]]; then
+            DATED_NAME="$DEST_DIR/${DAY}-${LABEL}-$(date +%Y-%m-%d).json"
+            cp "$RESULT_FILE" "$DATED_NAME"
+            cp "$RESULT_FILE" "$DEST_DIR/latest.json"
+            echo "✅ Archived $RESULT_FILE -> $DATED_NAME (and latest.json)"
+          else
+            echo "⚠️ Expected result file $RESULT_FILE not found - nothing to archive"
+          fi
+
+      - name: Commit Results
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add fantasy-engine/automation/scheduled-results
+          if git diff --cached --quiet; then
+            echo "No new results to commit"
+          else
+            git commit -m "Add ${{ steps.day.outputs.day }} (${{ steps.day.outputs.label }}) scheduled results"
+            git push
+          fi
+
+      - name: Upload Results Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fantasy-${{ steps.day.outputs.day }}-results-${{ github.run_number }}
+          path: fantasy-engine/automation/scheduled-results/${{ steps.day.outputs.day }}
+          retention-days: 30
