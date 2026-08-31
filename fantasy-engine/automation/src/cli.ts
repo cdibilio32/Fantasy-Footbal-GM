@@ -7,6 +7,7 @@ import { executeThursdayOptimization } from './commands/thursday.js';
 import { executeSundayCheck } from './commands/sunday.js';
 import { executeMondayAnalysis } from './commands/monday.js';
 import { executeTuesdayWaivers } from './commands/tuesday.js';
+import { executeTradeAnalysis } from './commands/trade.js';
 import { executeCustomWorkflow } from './commands/workflow.js';
 import { executePhase4Intelligence, runPhase4Mode, runEmergencyIntelligence } from './commands/phase4.js';
 
@@ -156,6 +157,32 @@ program
       
     } catch (error: any) {
       console.error('❌ Tuesday waiver analysis failed:', error.message);
+      process.exit(1);
+    }
+  });
+
+// Trade analysis command
+program
+  .command('trade')
+  .description('Execute trade opportunity analysis against real league rosters')
+  .option('--week <number>', 'NFL week number (defaults to the current NFL week)')
+  .action(async (options) => {
+    try {
+      console.log('🔁 Starting Trade Analysis...');
+      const result = await executeTradeAnalysis({
+        week: parseInt(options.week)
+      });
+
+      console.log('✅ Trade analysis complete');
+      process.stdout.write(JSON.stringify({
+        success: true,
+        summary: result.summary,
+        recommendations: result.recommendations,
+        timestamp: new Date().toISOString()
+      }));
+
+    } catch (error: any) {
+      console.error('❌ Trade analysis failed:', error.message);
       process.exit(1);
     }
   });

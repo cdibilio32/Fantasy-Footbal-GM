@@ -26,6 +26,193 @@ function loadMemories(): string {
   return `\nLEARNED PREFERENCES (from your past feedback — apply these when making recommendations):\n${content}\n`;
 }
 
+/**
+ * Task-specific instructions, response format, and data-inclusion flags for
+ * each CLI command. Each command gets a focused prompt covering only what it
+ * needs (lineup-only, waiver-only, trade-only) instead of one prompt that
+ * always asks for a full lineup+waiver+trade+IR review regardless of which
+ * command is running. See fantasy-engine/docs/prompt-engineering/ for the
+ * research this is distilled from (DeepSeek V4 Flash prompting guidance +
+ * per-task fantasy football decision frameworks).
+ */
+function getTaskInstructions(task: string, week: number): {
+  instructions: string;
+  includeWaiverWireData: boolean;
+  includeTradePartnerData: boolean;
+} {
+  switch (task) {
+    case 'thursday_optimization':
+      return {
+        includeWaiverWireData: false,
+        includeTradePartnerData: false,
+        instructions: `LINEUP LOCK — WEEK ${toWords(week)}, THURSDAY (2+ days out):
+This is a lineup-only review. Do not evaluate waivers or trades here — that's Tuesday's and the trade command's job. If you spot an urgent roster need only a waiver add could fix, flag it in one line at the end and stop there.
+
+FOCUS AREAS (in order):
+1. Set the week's floor-vs-ceiling posture first, based on each opponent's PROJECTED score, not record: a big projected opponent score means lean ceiling even with a good record of your own; a low projected opponent score means floor plays are safe even for a struggling team.
+2. Pull implied team totals from any Vegas lines/spreads you can find (use web_search) as a first-pass workload signal; treat them as provisional since lines can move by Sunday.
+3. For each position group, compare the current starter to the best bench alternative. Only recommend a change when you have strong, multi-signal conviction (bad matchup AND negative game script AND weak recent usage) — this early, one yellow flag is a "watch," not a bench.
+4. Treat in-week injury tags conservatively: a "questionable" tag alone (historically roughly 75% of these players suit up) is not enough to bench a clearly better starter — flag it for Sunday re-check instead of acting now. "Doubtful" is a much stronger signal and should be treated as a likely sit.
+5. Note any rough weather forecast as a watch item, not a hard trigger — forecasts three-plus days out are directional at best.
+6. Thursday Night Football players are the one true hard deadline this run — decide them fully now, since there is no Sunday re-check for them.
+
+RESPONSE FORMAT:
+- WHO TO START at each position, one line each, naming the specific signal driving it (matchup / game script / usage / injury status)
+- WHO TO BENCH and why
+- WATCH LIST: any player you're deliberately not moving on yet, and what would change your mind by Sunday
+- One line only, if applicable: a roster need only a waiver add could fix (do not design the pickup — flag it for Tuesday)`
+      };
+
+    case 'sunday_check':
+      return {
+        includeWaiverWireData: false,
+        includeTradePartnerData: false,
+        instructions: `FINAL LINEUP CHECK — WEEK ${toWords(week)}, SUNDAY (before kickoff):
+This is a lineup-only review. Most uncertainty from Thursday has resolved — act decisively on confirmed information rather than hedging.
+
+FOCUS AREAS (in order):
+1. Re-pull inactive/injury lists as your primary input: "out" or "doubtful" is a near-certain sit; a confirmed "active, no game-time decision" should override any lingering Thursday hesitation.
+2. Re-check snap-share/role signals for anything that changed since Thursday (a healthy scratch elsewhere, a backup who has inherited snaps) — this is the strongest late signal available, stronger than the injury tag itself.
+3. Re-check the Vegas line and weather one more time: a line that moved three-plus points, or a wind forecast that has climbed past fifteen to twenty mph, changes the game-script/passing read from Thursday and should override that earlier snapshot.
+4. Compare explicitly against the Thursday lineup (in context, if available): only change a Thursday call when you can name the specific new piece of information (news, weather, snap-share shift, line movement) driving it. Don't second-guess a sound Thursday call just because a close alternative exists — but once a real trigger exists, act on it fully rather than hedging, since there's little time left for anything else to change.
+5. If your opponent's lineup is already visible, this is the point to weigh game-theory leverage: if you're already losing a positional battle on paper, a higher-variance alternative may be worth the swing. Do not use this to bench a clear stud.
+
+RESPONSE FORMAT:
+- CONFIRMED FINAL LINEUP: WHO TO START at each position
+- CHANGES FROM THURSDAY: for each change, name the specific new information that triggered it (if no changes, say so explicitly)
+- ANY REMAINING QUESTIONABLE CALL: state your decision and the confirmed information behind it — no more hedging at this point`
+      };
+
+    case 'monday_analysis':
+      return {
+        includeWaiverWireData: true,
+        includeTradePartnerData: false,
+        instructions: `POST-GAME ANALYSIS & INITIAL WAIVER SCAN — WEEK ${toWords(week)}, MONDAY:
+This is a review-and-flag pass, not a full waiver plan — Tuesday's waiver run is where FAAB bids and drop calls get finalized.
+
+FOCUS AREAS (in order):
+1. Compare actual output to your projections for each starter: name the specific hits and misses, and for each miss, say whether it was bad process (wrong read on role/matchup) or bad luck (right read, bad outcome) — a good decision that lost is not evidence the process was wrong.
+2. Scan for role changes: a bench or waiver player whose opportunity (snaps, targets, red-zone touches) jumped this week is worth flagging even if his box score hasn't caught up yet.
+3. Identify the two or three sharpest roster gaps this week exposed (an underperforming starter with no bench answer, an upcoming bye with no covered replacement, an injury with an unclear recovery timeline).
+4. Name early-look waiver targets for each gap based on opportunity/role, not last week's box score — leave exact FAAB bid sizing to Tuesday's dedicated waiver run.
+
+RESPONSE FORMAT:
+- WHAT WORKED / WHAT DIDN'T: two to three bullets each, tied to process, not just outcome
+- ROSTER GAPS: the sharpest two to three needs this week exposed
+- EARLY WAIVER WATCHLIST: named players per gap, with the opportunity signal driving each (bid sizing comes Tuesday)`
+      };
+
+    case 'tuesday_waivers':
+      return {
+        includeWaiverWireData: true,
+        includeTradePartnerData: false,
+        instructions: `WAIVER WIRE STRATEGY — WEEK ${toWords(week)}, TUESDAY:
+This is a waiver/free-agency-only review. Do not re-litigate this week's lineup or propose trades here.
+
+FOCUS AREAS (in order):
+1. Separate opportunity from box score for every candidate: snap share, target share, and red-zone/goal-line touches move one to two weeks before points catch up. Prefer players whose role is outrunning their production (buy-low) over players whose production is outrunning their role (touchdown-dependent, likely to regress).
+2. For streaming positions (QB/TE/D-ST/K), only recommend a swap when the available option has a clearer role AND a better matchup than the incumbent this specific week — never justify a stream by pointing at last week's points.
+3. Size every FAAB recommendation as a percentage of remaining budget, not a raw dollar figure, and scale it to season stage: be aggressive (40-80%, even higher for a true league-winner) on a clear early-season breakout when budgets are deep; tighten toward proven, role-secure players and keep a reserve (roughly 20-25% of original budget) unspent past the season's midpoint for injury-driven opportunities. Modest depth adds should cost a small fraction of the budget; D/ST and K streams should cost close to nothing. If you can't tell whether the league uses FAAB or rolling waiver priority, give the recommendation in percentage-of-budget terms and also note the priority-league alternative (worth burning your priority slot, or let it ride).
+4. Before naming any drop candidate, check: bye-week collisions with other roster pieces, IR-slot eligibility (an injured stash that qualifies for IR shouldn't cost a bench spot), handcuff value (a backup to a rostered starter has spike value beyond his raw projection), and positional depth floor (don't recommend dropping the last viable bench body at a scarce position like RB/TE even if his projection is low).
+5. Get ahead of bye weeks and IR-eligible returns one to two weeks before they hit rather than reacting the week of — note any bye/IR need visible for the next two weeks even if you're not acting on it yet.
+6. Justify every recommendation with the opportunity/role/matchup reasoning behind it, not the player's last game alone.
+
+RESPONSE FORMAT — use this exact structure for every add:
+"ADD [Player Name] ([Position]) - [opportunity/role/matchup reason] - FAAB: [X]% of remaining budget (or "claim, worth your priority slot" / "let it ride" for priority leagues)
+DROP [Player Name] ([Position]) - [why he clears the bye/IR/handcuff/depth-floor checks above]"
+Rank adds by priority, highest first. If a position has no priority add this week, say so explicitly rather than forcing a claim.`
+      };
+
+    case 'trade_analysis':
+      return {
+        includeWaiverWireData: true,
+        includeTradePartnerData: true,
+        instructions: `TRADE EVALUATION — WEEK ${toWords(week)}:
+This is a trade-only review. Do not evaluate this week's lineup or waiver wire here.
+
+FOCUS AREAS (in order):
+1. Before valuing anyone, establish team context: are you a contender (competing for a title this season) or a rebuilder (building long-term value)? A contender should prioritize proven, high-floor immediate production and weeks 15-17 (fantasy playoff) schedule strength, and can reasonably overpay in season-long value using bench depth. A rebuilder should do the opposite: sell veteran/name-value assets at their peak for youth, unrealized upside, or draft capital.
+2. Don't compare players by raw projected points alone: apply a replacement-level lens. A player's real trade value is how far he beats the streamable waiver-wire option at his position, not his point total in isolation. Watch for tier-emptying effects — an injury or bye that thins a position leaguewide raises replacement level and quietly increases the value of everyone remaining there.
+3. Separate recent box-score output from underlying opportunity (snap share, target share, red-zone role) for every player in the deal: flag buy-low targets whose role outpaces their production, and flag targets to avoid whose production outpaces their role (touchdown-dependent, due for regression).
+4. Weigh consolidation (multiple useful players for one difference-maker) against depth needs: recommend it only when the team giving up quantity has genuine surplus there and can absorb thinner depth; warn against it for a team already fragile to byes/injury.
+5. Risk-adjust every player in the deal for injury status/recency (an "Out" tag is a much bigger discount than "Questionable"; a recently-returned player carries workload-ramp risk beyond his tag), and for role security (is his target/carry share locked in, or contested by a teammate who could take it back).
+6. Evaluate the trade from BOTH teams' perspectives. A trade that doesn't plausibly serve the partner's roster needs and context is a wish-list, not a realistic recommendation — say so if you can't construct a case for the other side.
+7. Explicitly call out if you're at risk of recency bias (over-indexing on the last one to two games), name-brand bias (valuing draft pedigree over current role), or box-score fixation (crediting an unsustainable touchdown rate or garbage-time output as skill) before finalizing a recommendation.
+
+RESPONSE FORMAT: you MUST name a specific team from the "OTHER TEAMS" list below (including its ESPN Team ID) and a specific real player currently on that team's roster, copy-pasted verbatim from that team's block — never a hypothetical player, and never a player from the "AVAILABLE WAIVER WIRE/FREE AGENT PLAYERS" list (those are zero-owned free agents, not tradeable). Use this exact structure:
+"TRADE [Your Player] ([Position]) to [Team Name] (Team ID [N]) for [Their Player] ([Position])
+CONTEXT: [contender/rebuilder framing for your team]
+WHY IT WORKS FOR BOTH SIDES: [your side's gain] / [their side's gain, tied to their actual roster construction]
+RISK: [the single biggest risk-adjustment factor in this deal]"
+If no team in the OTHER TEAMS list has a matching need/surplus for a realistic trade, say so explicitly instead of inventing a partner.`
+      };
+
+    default:
+      // Ad-hoc `workflow --task <x>` commands (draft_analysis, playoff_prep,
+      // streaming_strategy, injury_impact, additional_analysis, etc.) keep
+      // the original full co-manager review covering lineup, waivers, IR,
+      // and trades together, since they aren't one of the four specialized
+      // commands above.
+      return {
+        includeWaiverWireData: true,
+        includeTradePartnerData: true,
+        instructions: `CO-MANAGER REVIEW INSTRUCTIONS:
+Review the roster like we're sitting together planning this week. Go position by position and tell me who to start, who to bench, and who to pick up from waivers. Be direct and decisive.
+
+**POSITION-BY-POSITION REVIEW:**
+
+1. **QUARTERBACK**: Look at my current starter vs bench QBs. Should I start someone else? Any waiver QBs worth grabbing? If yes, specify WHO TO DROP.
+
+2. **RUNNING BACKS**: Check my RB1, RB2, and FLEX options. Are my starters the highest projected? Should I swap anyone from the bench? Any waiver RBs to target? If adding an RB, specify WHO TO DROP.
+
+3. **WIDE RECEIVERS**: Review my WR1, WR2, and FLEX spots. Who has the best matchups? Should I start different WRs from my bench? Any waiver WRs to consider? If adding a WR, specify WHO TO DROP.
+
+4. **TIGHT END**: Is my TE starter the right choice? Better option on my bench or waivers? If adding a TE, specify WHO TO DROP.
+
+5. **FLEX POSITIONS**: Compare my RBs vs WRs for FLEX spots. Who has the highest ceiling this week?
+
+6. **DEFENSE/KICKER**: Any better streaming options on waivers? If streaming, specify WHO TO DROP.
+
+7. **INJURED RESERVE (IR)**: Check my IR players' injury status. Are any eligible to return from IR? If so, recommend WHO TO DROP from active roster to make room.
+
+**GIVE ME:**
+- WHO TO START at each position (with brief reason)
+- WHO TO BENCH (and why)
+- TOP 3 WAIVER PICKUPS to consider (if any) - **IMPORTANT: For each waiver pickup, specify WHO TO DROP from my current roster**
+- Any lineup swaps between starters and bench
+- **IR MOVES**: If any IR players are ready to return, specify WHO TO DROP from active roster to activate them
+
+**WAIVER WIRE FORMAT:**
+When recommending waiver pickups, use this format:
+"ADD [Player Name] ([Position]) - [Reason]
+DROP [Player Name] ([Position]) - [Why they're droppable]"
+
+Example: "ADD Mike Gesicki (TE) - Higher upside than current option
+DROP Brenton Strange (TE) - Lower projection and limited role"
+
+**IR ACTIVATION FORMAT:**
+When recommending IR activations, use this format:
+"ACTIVATE [Player Name] ([Position]) from IR - [Reason/Status]
+DROP [Player Name] ([Position]) - [Why they're droppable to make room]"
+
+Example: "ACTIVATE Cooper Kupp (WR) from IR - Expected to play this week, cleared injury report
+DROP Tyler Lockett (WR) - Inconsistent production and tough schedule"
+
+**TRADE FORMAT:**
+When suggesting a trade, you MUST name a specific team from the "OTHER TEAMS" list above (including its ESPN Team ID) and a specific real player currently on that team's roster — never a hypothetical or generic player, and never a player not listed under that team. Use this format:
+"TRADE [Your Player] ([Position]) to [Team Name] (Team ID [N]) for [Their Player] ([Position])
+WHY: [reasoning about why both sides would do this deal]"
+
+Example: "TRADE Michael Pittman Jr. (WR) to Team "Gridiron Gurus" (Team ID 6) for Kalel Mullings (RB)
+WHY: Gurus are WR-thin and RB-heavy; you get RB depth, they get a starting-caliber WR"
+
+CRITICAL: the player you receive must be copy-pasted verbatim from that team's block under "OTHER TEAMS" — never from the "AVAILABLE WAIVER WIRE/FREE AGENT PLAYERS" list. A player listed there is a zero-owned free agent, not on ANY team's roster, and cannot be traded for. Double-check the player you name actually appears under the specific team you're proposing before writing it down.
+
+If no team in the OTHER TEAMS list has a matching need/surplus for a trade idea, say so explicitly instead of inventing a partner.`
+      };
+  }
+}
+
 export async function executeAIWorkflow(args: {
   task: string;
   leagues: Array<{ leagueId: string; teamId: string; name?: string }>;
@@ -258,6 +445,7 @@ FANTASY ANALYSIS GUIDELINES:
 • Compare your roster players against these expert rankings and tiers` : '\n⚠️ FantasyPros expert rankings not available - using ESPN data only\n';
 
     const memorySection = loadMemories();
+    const taskConfig = getTaskInstructions(task, week);
 
     // Compact per-team positional breakdown of every OTHER roster in the league,
     // so trade suggestions can name a real team and a real player instead of a
@@ -449,8 +637,8 @@ ${league.injuredReserve && league.injuredReserve.length > 0 ? league.injuredRese
   return `• ${p.fullName} (${p.position}) - ${projDesc} | ${ownedDesc}${injuryInfo}`;
 }).join('\n') : 'No players on injured reserve'}
 
-AVAILABLE WAIVER WIRE/FREE AGENT PLAYERS BY POSITION:
-${league.availablePlayers ? Object.entries(league.availablePlayers).map(([position, players]: [string, any[]]) => 
+${taskConfig.includeWaiverWireData ? `AVAILABLE WAIVER WIRE/FREE AGENT PLAYERS BY POSITION:
+${league.availablePlayers ? Object.entries(league.availablePlayers).map(([position, players]: [string, any[]]) =>
   `${position}: ${players.length > 0 ? players.map((p: any) => {
     // Format waiver wire players similar to roster players
     let projDesc = 'Unknown projection';
@@ -478,65 +666,13 @@ ${league.availablePlayers ? Object.entries(league.availablePlayers).map(([positi
     
     return `• ${p.fullName} - ${projDesc} | ${ownedDesc}`;
   }).join('\n') : 'None available'}`
-).join('\n') : 'Waiver wire data not available'}
+).join('\n') : 'Waiver wire data not available'}` : ''}
 `).join('\n')}
 ${expertDataSection}
-${otherTeamsSection}
+${taskConfig.includeTradePartnerData ? otherTeamsSection : ''}
 ${memorySection}
 
-CO-MANAGER REVIEW INSTRUCTIONS:
-Review the roster like we're sitting together planning this week's lineup. Go position by position and tell me who to start, who to bench, and who to pick up from waivers. Be direct and decisive.
-
-**POSITION-BY-POSITION REVIEW:**
-
-1. **QUARTERBACK**: Look at my current starter vs bench QBs. Should I start someone else? Any waiver QBs worth grabbing? If yes, specify WHO TO DROP.
-
-2. **RUNNING BACKS**: Check my RB1, RB2, and FLEX options. Are my starters the highest projected? Should I swap anyone from the bench? Any waiver RBs to target? If adding an RB, specify WHO TO DROP.
-
-3. **WIDE RECEIVERS**: Review my WR1, WR2, and FLEX spots. Who has the best matchups? Should I start different WRs from my bench? Any waiver WRs to consider? If adding a WR, specify WHO TO DROP.
-
-4. **TIGHT END**: Is my TE starter the right choice? Better option on my bench or waivers? If adding a TE, specify WHO TO DROP.
-
-5. **FLEX POSITIONS**: Compare my RBs vs WRs for FLEX spots. Who has the highest ceiling this week?
-
-6. **DEFENSE/KICKER**: Any better streaming options on waivers? If streaming, specify WHO TO DROP.
-
-7. **INJURED RESERVE (IR)**: Check my IR players' injury status. Are any eligible to return from IR? If so, recommend WHO TO DROP from active roster to make room.
-
-**GIVE ME:**
-- WHO TO START at each position (with brief reason)  
-- WHO TO BENCH (and why)
-- TOP 3 WAIVER PICKUPS to consider (if any) - **IMPORTANT: For each waiver pickup, specify WHO TO DROP from my current roster**
-- Any lineup swaps between starters and bench
-- **IR MOVES**: If any IR players are ready to return, specify WHO TO DROP from active roster to activate them
-
-**WAIVER WIRE FORMAT:**
-When recommending waiver pickups, use this format:
-"ADD [Player Name] ([Position]) - [Reason]
-DROP [Player Name] ([Position]) - [Why they're droppable]"
-
-Example: "ADD Mike Gesicki (TE) - Higher upside than current option
-DROP Brenton Strange (TE) - Lower projection and limited role"
-
-**IR ACTIVATION FORMAT:**
-When recommending IR activations, use this format:
-"ACTIVATE [Player Name] ([Position]) from IR - [Reason/Status]
-DROP [Player Name] ([Position]) - [Why they're droppable to make room]"
-
-Example: "ACTIVATE Cooper Kupp (WR) from IR - Expected to play this week, cleared injury report
-DROP Tyler Lockett (WR) - Inconsistent production and tough schedule"
-
-**TRADE FORMAT:**
-When suggesting a trade, you MUST name a specific team from the "OTHER TEAMS" list above (including its ESPN Team ID) and a specific real player currently on that team's roster — never a hypothetical or generic player, and never a player not listed under that team. Use this format:
-"TRADE [Your Player] ([Position]) to [Team Name] (Team ID [N]) for [Their Player] ([Position])
-WHY: [reasoning about why both sides would do this deal]"
-
-Example: "TRADE Michael Pittman Jr. (WR) to Team "Gridiron Gurus" (Team ID 6) for Kalel Mullings (RB)
-WHY: Gurus are WR-thin and RB-heavy; you get RB depth, they get a starting-caliber WR"
-
-CRITICAL: the player you receive must be copy-pasted verbatim from that team's block under "OTHER TEAMS" — never from the "AVAILABLE WAIVER WIRE/FREE AGENT PLAYERS" list. A player listed there is a zero-owned free agent, not on ANY team's roster, and cannot be traded for. Double-check the player you name actually appears under the specific team you're proposing before writing it down.
-
-If no team in the OTHER TEAMS list has a matching need/surplus for a trade idea, say so explicitly instead of inventing a partner.
+${taskConfig.instructions}
 
 Use web_search() to check for any breaking injury news, weather concerns, or lineup changes that could affect my decisions.`;
 

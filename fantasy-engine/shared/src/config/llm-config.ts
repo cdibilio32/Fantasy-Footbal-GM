@@ -11,12 +11,21 @@ export class LLMConfigManager {
     const openaiKey = process.env.OPENAI_API_KEY;
     const perplexityKey = process.env.PERPLEXITY_API_KEY;
     const openrouterKey = process.env.OPENROUTER_API_KEY;
+    const deepseekKey = process.env.DEEPSEEK_API_KEY;
 
     // Primary provider preference from env or default to openrouter
-    const primaryProvider = (process.env.PRIMARY_LLM_PROVIDER || 'openrouter') as 'gemini' | 'claude' | 'openai' | 'perplexity' | 'openrouter';
+    const primaryProvider = (process.env.PRIMARY_LLM_PROVIDER || 'openrouter') as 'gemini' | 'claude' | 'openai' | 'perplexity' | 'openrouter' | 'deepseek';
 
     // Create config for primary provider if key exists
-    if (primaryProvider === 'openrouter' && openrouterKey) {
+    if (primaryProvider === 'deepseek' && deepseekKey) {
+      return {
+        provider: 'deepseek',
+        model: process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash',
+        api_key: deepseekKey,
+        max_tokens: 1000,
+        temperature: 0.7
+      };
+    } else if (primaryProvider === 'openrouter' && openrouterKey) {
       return {
         provider: 'openrouter',
         model: process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b',
@@ -59,7 +68,15 @@ export class LLMConfigManager {
     }
     
     // Fallback to any available provider
-    if (openrouterKey) {
+    if (deepseekKey) {
+      return {
+        provider: 'deepseek',
+        model: process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash',
+        api_key: deepseekKey,
+        max_tokens: 1000,
+        temperature: 0.7
+      };
+    } else if (openrouterKey) {
       return {
         provider: 'openrouter',
         model: process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b',
@@ -101,7 +118,7 @@ export class LLMConfigManager {
       };
     }
     
-    throw new Error('No LLM API keys found in environment variables (OPENROUTER_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY, OPENAI_API_KEY, PERPLEXITY_API_KEY)');
+    throw new Error('No LLM API keys found in environment variables (DEEPSEEK_API_KEY, OPENROUTER_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY, OPENAI_API_KEY, PERPLEXITY_API_KEY)');
   }
 
   private async getLLMManager(): Promise<LLMManager> {
@@ -218,13 +235,17 @@ export class LLMConfigManager {
     }
   }
 
-  async switchProvider(provider: 'gemini' | 'claude' | 'openai' | 'perplexity' | 'openrouter'): Promise<boolean> {
+  async switchProvider(provider: 'gemini' | 'claude' | 'openai' | 'perplexity' | 'openrouter' | 'deepseek'): Promise<boolean> {
     try {
       const config = await this.detectAndCreateConfig();
       config.provider = provider;
 
       // Get the correct API key for the provider
       switch (provider) {
+        case 'deepseek':
+          config.api_key = process.env.DEEPSEEK_API_KEY || '';
+          config.model = process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash';
+          break;
         case 'gemini':
           config.api_key = process.env.GEMINI_API_KEY || '';
           config.model = 'gemini-2.0-flash-exp';

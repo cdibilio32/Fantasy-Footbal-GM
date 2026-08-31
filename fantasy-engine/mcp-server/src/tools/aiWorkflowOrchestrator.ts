@@ -180,9 +180,10 @@ export class AIWorkflowOrchestrator {
       'thursday_optimization': 'thursday',
       'sunday_check': 'sunday',
       'monday_analysis': 'monday',
-      'tuesday_waivers': 'tuesday'
+      'tuesday_waivers': 'tuesday',
+      'trade_analysis': 'trade'
     };
-    
+
     return dayMap[task] || 'unknown';
   }
 
@@ -191,9 +192,10 @@ export class AIWorkflowOrchestrator {
       'thursday_optimization': 'lineup',
       'sunday_check': 'lineup',
       'monday_analysis': 'analysis',
-      'tuesday_waivers': 'waivers'
+      'tuesday_waivers': 'waivers',
+      'trade_analysis': 'analysis'
     };
-    
+
     return actionMap[task] || 'analysis';
   }
 
@@ -202,9 +204,10 @@ export class AIWorkflowOrchestrator {
       'thursday_optimization': 'high',
       'sunday_check': 'critical',
       'monday_analysis': 'medium',
-      'tuesday_waivers': 'medium'
+      'tuesday_waivers': 'medium',
+      'trade_analysis': 'medium'
     };
-    
+
     return priorityMap[task] || 'medium';
   }
 
@@ -213,9 +216,10 @@ export class AIWorkflowOrchestrator {
       'thursday_optimization': ['injuries', 'matchups', 'weather'],
       'sunday_check': ['inactives', 'late_news', 'pivots'],
       'monday_analysis': ['performance', 'waivers', 'roster_gaps'],
-      'tuesday_waivers': ['availability', 'faab', 'streaming']
+      'tuesday_waivers': ['availability', 'faab', 'streaming'],
+      'trade_analysis': ['trade_value', 'roster_context', 'risk_adjustment']
     };
-    
+
     return focusMap[task] || ['general'];
   }
 
@@ -224,9 +228,10 @@ export class AIWorkflowOrchestrator {
       'thursday_optimization': 'lineup_optimization',
       'sunday_check': 'lineup_optimization',
       'monday_analysis': 'roster_analysis',
-      'tuesday_waivers': 'waiver_analysis'
+      'tuesday_waivers': 'waiver_analysis',
+      'trade_analysis': 'trade_analysis'
     };
-    
+
     return taskMap[task] || 'general_analysis';
   }
 
@@ -299,9 +304,14 @@ export class AIWorkflowOrchestrator {
           'Waiver wire analysis completed',
           'FAAB budget recommendations provided',
           'Streaming options identified for upcoming week'
+        ],
+        'trade_analysis': [
+          'Trade evaluation completed',
+          'Contender/rebuilder context and replacement-level value applied',
+          'Risk-adjusted trade recommendation provided'
         ]
       };
-      
+
       return taskInsights[task] || ['Fantasy analysis completed successfully'];
     }
     
@@ -319,7 +329,8 @@ export class AIWorkflowOrchestrator {
       'thursday_optimization': ['start', 'sit', 'injury', 'matchup', 'projection'],
       'sunday_check': ['active', 'inactive', 'pivot', 'change', 'final'],
       'monday_analysis': ['performance', 'waiver', 'target', 'drop', 'add'],
-      'tuesday_waivers': ['available', 'claim', 'budget', 'streaming', 'pickup']
+      'tuesday_waivers': ['available', 'claim', 'budget', 'streaming', 'pickup'],
+      'trade_analysis': ['trade', 'value', 'contender', 'rebuild', 'risk']
     };
     
     const keywords = keywordMap[task] || [];
@@ -387,7 +398,8 @@ export class AIWorkflowOrchestrator {
       'thursday_optimization': 10,
       'sunday_check': 5,
       'monday_analysis': 15,
-      'tuesday_waivers': 8
+      'tuesday_waivers': 8,
+      'trade_analysis': 12
     };
     
     baseConfidence += taskComplexity[task] || 0;

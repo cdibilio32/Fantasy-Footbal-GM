@@ -18,11 +18,12 @@ export interface WorkflowContext {
   };
 }
 
-export type WorkflowTask = 
+export type WorkflowTask =
   | 'thursday_optimization'
-  | 'sunday_check' 
+  | 'sunday_check'
   | 'monday_analysis'
-  | 'tuesday_waivers';
+  | 'tuesday_waivers'
+  | 'trade_analysis';
 
 export interface WorkflowResult {
   task: WorkflowTask;
