@@ -1,0 +1,46 @@
+{
+  "week": 1,
+  "leagues": [
+    {
+      "name": "My League",
+      "leagueId": "801088097"
+    }
+  ],
+  "aiWorkflowResult": {
+    "success": true,
+    "task": "trade_analysis",
+    "week": 1,
+    "leagues": [
+      {
+        "leagueId": "801088097",
+        "teamId": "13",
+        "name": "Dibilio Family League"
+      }
+    ],
+    "summary": {
+      "keyInsights": [],
+      "confidence": 95,
+      "dataSourcesUsed": [
+        "ESPN API",
+        "Real LLM Analysis (No FantasyPros)"
+      ],
+      "fullLLMResponse": "**TRADE** Tony Pollard (RB) to **Tjason's Terrific Team** (Team ID eight) for Dalton Kincaid (TE)  \n\n**CONTEXT:** Team onethree is a **contender** – we have a solid WR core (St. Brown, Adams, Zay Flowers) and a high‑floor RB in Saquon. Our biggest weakness is TE depth (only starter Colston Loveland). Upgrading to a reliable, mid‑tier TE while giving up a replaceable RB improves our starter lineup without jeopardizing playoff depth.\n\n**WHY IT WORKS FOR BOTH SIDES:**  \n- **Our side’s gain:** Dalton Kincaid is a **mid‑tier, high‑floor TE** (projected ~8 pts / wk, solid red‑zone target share, locked in as a starter on a team that also has T.J. Hockenson). Swapping him for Pollard upgrades our TE from a low‑output starter to a reliable week‑to‑week option, fixing a glaring positional weakness.  \n- **Their side’s gain:** Tjason’s Terrific Team is thin at RB (only De’Von Achane and Jadarian Price). Adding **Tony Pollard** (222.1 season points, a **Tier‑3 RB** who sees a consistent workload in the Cowboys’ backfield) gives them a proven, high‑floor RB for the fantasy playoffs. They retain elite TE T.J. Hockenson, so losing Kincaid does not leave them without a quality TE.\n\n**RISK:** Pollard’s role is **situational** – he is a committee‑back and can be de‑ridden by a surge from Ezekiel Elliott or a shift to a pass‑heavy game plan. If his snap share drops in the latter half of the season, his production could fall below replacement‑level. Conversely, Kincaid has a **minor injury history** (ankle sprain in preseason 2023) that could limit early‑season availability, but his role in the Giants’ offense is largely locked in."
+    },
+    "recommendations": [
+      {
+        "leagueId": "801088097",
+        "teamId": "13",
+        "name": "Dibilio Family League",
+        "changes": [],
+        "analysis": "**TRADE** Tony Pollard (RB) to **Tjason's Terrific Team** (Team ID eight) for Dalton Kincaid (TE)  \n\n**CONTEXT:** Team onethree is a **contender** – we have a solid WR core (St. Brown, Adams, Zay Flowers) and a high‑floor RB in Saquon. Our biggest weakness is TE depth (only starter Colston Loveland). Upgrading to a reliable, mid‑tier TE while giving up a replaceable RB improves our starter lineup without jeopardizing playoff depth.\n\n**WHY IT WORKS FOR BOTH SIDES:**  \n- **Our side’s gain:** Dalton Kincaid is a **mid‑tier, high‑floor TE** (projected ~8 pts / wk, solid red‑zone target share, locked in as a starter on a team that also has T.J. Hockenson). Swapping him for Pollard upgrades our TE from a low‑output starter to a reliable week‑to‑week option, fixing a glaring positional weakness.  \n- **Their side’s gain:** Tjason’s Terrific Team is thin at RB (only De’Von Achane and Jadarian Price). Adding **Tony Pollard** (222.1 season points, a **Tier‑3 RB** who sees a consistent workload in the Cowboys’ backfield) gives them a proven, high‑floor RB for the fantasy playoffs. They retain elite TE T.J. Hockenson, so losing Kincaid does not leave them without a quality TE.\n\n**RISK:** Pollard’s role is **situational** – he is a committee‑back and can be de‑ridden by a surge from Ezekiel Elliott or a shift to a pass‑heavy game plan. If his snap share drops in the latter half of the season, his production could fall below replacement‑level. Conversely, Kincaid has a **minor injury history** (ankle sprain in preseason 2023) that could limit early‑season availability, but his role in the Giants’ offense is largely locked in."
+      }
+    ],
+    "llmResponse": {
+      "content": "**TRADE** Tony Pollard (RB) to **Tjason's Terrific Team** (Team ID eight) for Dalton Kincaid (TE)  \n\n**CONTEXT:** Team onethree is a **contender** – we have a solid WR core (St. Brown, Adams, Zay Flowers) and a high‑floor RB in Saquon. Our biggest weakness is TE depth (only starter Colston Loveland). Upgrading to a reliable, mid‑tier TE while giving up a replaceable RB improves our starter lineup without jeopardizing playoff depth.\n\n**WHY IT WORKS FOR BOTH SIDES:**  \n- **Our side’s gain:** Dalton Kincaid is a **mid‑tier, high‑floor TE** (projected ~8 pts / wk, solid red‑zone target share, locked in as a starter on a team that also has T.J. Hockenson). Swapping him for Pollard upgrades our TE from a low‑output starter to a reliable week‑to‑week option, fixing a glaring positional weakness.  \n- **Their side’s gain:** Tjason’s Terrific Team is thin at RB (only De’Von Achane and Jadarian Price). Adding **Tony Pollard** (222.1 season points, a **Tier‑3 RB** who sees a consistent workload in the Cowboys’ backfield) gives them a proven, high‑floor RB for the fantasy playoffs. They retain elite TE T.J. Hockenson, so losing Kincaid does not leave them without a quality TE.\n\n**RISK:** Pollard’s role is **situational** – he is a committee‑back and can be de‑ridden by a surge from Ezekiel Elliott or a shift to a pass‑heavy game plan. If his snap share drops in the latter half of the season, his production could fall below replacement‑level. Conversely, Kincaid has a **minor injury history** (ankle sprain in preseason 2023) that could limit early‑season availability, but his role in the Giants’ offense is largely locked in.",
+      "cost": 0.015477,
+      "searches_performed": 1
+    },
+    "timestamp": "2026-08-31T02:04:43.121Z"
+  },
+  "timestamp": "2026-08-31T02:04:43.121Z"
+}
