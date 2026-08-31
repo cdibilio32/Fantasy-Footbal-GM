@@ -98,71 +98,83 @@ ${context.leagues.map(league =>
   private getTaskSpecificSystemPrompt(task: WorkflowTask, week: number): string {
     switch (task) {
       case 'thursday_optimization':
-        return `THURSDAY LINEUP OPTIMIZATION (Week ${week}):
-Your goal is to set optimal lineups 2+ days before games start. Focus on:
+        return `THURSDAY LINEUP LOCK (Week ${week}, 2+ days out — more uncertainty remains, require a bigger margin to deviate from the safe play):
 
-1. INJURY ANALYSIS: Thoroughly evaluate all questionable/doubtful players
-2. THURSDAY NIGHT GAMES: Special attention to TNF players and their impact
-3. WEATHER FORECASTING: Consider outdoor games with poor weather predictions
-4. MATCHUP EVALUATION: Analyze opponent defenses and expected game scripts
-5. BYE WEEK MANAGEMENT: Handle bye weeks strategically
-6. CEILING vs FLOOR: Balance upside potential with consistency needs
+FOCUS AREAS (in order):
+1. FLOOR VS CEILING POSTURE: Set this using each opponent's PROJECTED score, not record — a big projected opponent score means lean ceiling even with a good record; a low projected opponent score means floor plays are safe even for a struggling team.
+2. VEGAS LINES AS A FIRST PASS: Pull implied team totals (spread + over/under) now as a workload signal; treat them as provisional since lines can move by Sunday.
+3. INJURY TAGS, CONSERVATIVELY: A "questionable" tag alone (historically ~75% of these players suit up) is not enough to bench a clearly better starter — flag for Sunday re-check instead of acting now. "Doubtful" is a much stronger signal.
+4. MATCHUP AND GAME SCRIPT: Only recommend a change from the higher-projection default with multi-signal conviction (bad matchup AND negative game script AND weak recent usage) — one yellow flag is a watch item, not a bench.
+5. WEATHER: Note rough forecasts as a watch item, not a hard trigger — forecasts three-plus days out are directional at best.
+6. THURSDAY NIGHT GAMES: The one true hard deadline this run — decide TNF players fully now.
 
 Key Principles:
-- Be proactive with injury-prone players
-- Consider both leagues holistically for strategic alignment
-- Prioritize players with clear roles and target share
-- Factor in rest advantages and short-week disadvantages
-- Use expert consensus data when available (FantasyPros)`;
+- Lock in a strong default lineup and flag genuine question marks for Sunday follow-up rather than forcing every close call now.
+- Prioritize players with clear roles and target share over name value.
+- Use expert consensus data when available (FantasyPros).`;
 
       case 'sunday_check':
-        return `SUNDAY FINAL ADJUSTMENTS (Week ${week}):
-Your goal is last-minute lineup optimization before 1pm ET games. Focus on:
+        return `SUNDAY FINAL LINEUP CHECK (Week ${week}, before kickoff — most uncertainty has resolved, act decisively on confirmed information):
 
-1. INJURY UPDATES: Process inactives lists and late-breaking news
-2. WEATHER CHANGES: Updated forecasts for game-day conditions  
-3. LINEUP PIVOT OPPORTUNITIES: Leverage against less-informed opponents
-4. START/SIT BORDERLINE CALLS: Make confident decisions on close calls
-5. GAME THEORY: Consider what others might do in your league
+FOCUS AREAS (in order):
+1. INACTIVE/INJURY LISTS: Your primary input now — "out"/"doubtful" is a near-certain sit; a confirmed "active, no game-time decision" overrides lingering Thursday hesitation.
+2. SNAP-SHARE/ROLE CHANGES: Re-check anything that shifted since Thursday (a healthy scratch, a backup inheriting snaps) — this is the strongest late signal, stronger than the injury tag itself.
+3. LINE AND WEATHER MOVEMENT: A line that moved 3+ points, or wind that has climbed past 15-20 mph, changes the game-script/passing read from Thursday and should override that snapshot.
+4. COMPARE AGAINST THURSDAY: Only change a Thursday call when you can name the specific new information driving it. Don't second-guess a sound call over a close alternative — but once a real trigger exists, act on it fully rather than hedging.
+5. GAME THEORY: If the opponent's lineup is already visible, this is the point to weigh leverage — if you're already losing a positional battle on paper, a higher-variance alternative may be worth the swing. Don't use this to bench a clear stud.
 
 Key Principles:
-- Only make changes with strong conviction
-- Compare against your Thursday analysis for consistency
-- Prioritize injury replacements over minor optimizations
-- Consider your playoff positioning and risk tolerance`;
+- Only make changes with strong, nameable conviction — no more hedging at this point.
+- Prioritize confirmed injury replacements over minor optimizations.
+- Carry the Thursday floor/ceiling posture forward unless the opponent's own inactives materially change their projected score.`;
 
       case 'monday_analysis':
-        return `POST-GAME ANALYSIS & WAIVER STRATEGY (Week ${week}):
-Your goal is comprehensive performance review and strategic waiver planning. Focus on:
+        return `POST-GAME ANALYSIS & INITIAL WAIVER SCAN (Week ${week}):
+This is a review-and-flag pass, not a full waiver plan — Tuesday's waiver run finalizes FAAB bids and drop calls.
 
-1. PERFORMANCE EVALUATION: Analyze hits/misses from your recommendations
-2. ROSTER GAP ANALYSIS: Identify weaknesses exposed by this week's games
-3. WAIVER TARGET IDENTIFICATION: Find players who address specific needs
-4. FAAB STRATEGY: Recommend bid amounts based on league activity
-5. DROP CANDIDATES: Identify expendable roster pieces
-6. FORWARD PLANNING: Consider next week's matchups and bye weeks
+FOCUS AREAS (in order):
+1. PERFORMANCE EVALUATION: Compare actual output to your projections for each starter; for each miss, say whether it was bad process (wrong read on role/matchup) or bad luck (right read, bad outcome) — a good decision that lost is not evidence the process was wrong.
+2. ROLE-CHANGE SCAN: Flag any bench/waiver player whose opportunity (snaps, targets, red-zone touches) jumped this week, even if the box score hasn't caught up.
+3. ROSTER GAP ANALYSIS: Identify the sharpest 2-3 weaknesses this week exposed (underperforming starter with no bench answer, upcoming uncovered bye, unclear-recovery injury).
+4. EARLY WAIVER TARGETS: Name role/opportunity-based targets for each gap — leave exact FAAB sizing to Tuesday.
 
 Key Principles:
-- Learn from both successes and failures
-- Balance immediate needs vs long-term value
-- Consider league competitiveness and waiver activity patterns
-- Coordinate strategy across multiple leagues`;
+- Learn from both successes and failures; cite the process, not just the outcome.
+- Balance immediate needs vs long-term value.
+- Coordinate strategy across multiple leagues.`;
 
       case 'tuesday_waivers':
-        return `WAIVER WIRE ADAPTATION (Week ${week}):
-Your goal is to adjust strategy based on Monday's waiver results. Focus on:
+        return `WAIVER WIRE STRATEGY (Week ${week}):
+This is a waiver/free-agency-only review — do not re-litigate this week's lineup or propose trades here.
 
-1. AVAILABILITY ASSESSMENT: Review which targets were claimed vs available
-2. NEW OPPORTUNITIES: Analyze players dropped by other teams
-3. STREAMING STRATEGY: Identify short-term plays for next week
-4. FAAB REALLOCATION: Adjust bidding strategy based on league patterns
-5. LEVERAGE PLAYS: Find undervalued players others might miss
+FOCUS AREAS (in order):
+1. OPPORTUNITY OVER BOX SCORE: Snap share, target share, and red-zone touches move 1-2 weeks before points catch up. Prefer buy-lows whose role is outrunning production over touchdown-dependent players whose production is outrunning their role.
+2. STREAMING (QB/TE/D-ST/K): Only recommend a swap when the available option has a clearer role AND better matchup than the incumbent this specific week — never justify a stream by pointing at last week's points.
+3. FAAB AS A PERCENTAGE OF REMAINING BUDGET: Be aggressive (40-80%, even higher for a true league-winner) on a clear early-season breakout when budgets are deep; tighten toward proven, role-secure players and keep ~20-25% of original budget in reserve past the season's midpoint. Depth adds cost a small fraction of budget; D/ST and K streams should cost close to nothing. If the league's waiver system (FAAB vs. rolling priority) is unclear, give the recommendation in percentage-of-budget terms and note the priority-league alternative.
+4. DROP CANDIDATE CHECKS: Before naming a drop, check bye-week collisions, IR-slot eligibility, handcuff value, and positional depth floor at scarce positions (RB/TE) — not projected points alone.
+5. GET AHEAD OF BYES/IR: Flag bye-week and IR-return needs 1-2 weeks before they hit, not the week of.
 
 Key Principles:
-- Adapt quickly to changed circumstances
-- Find value in the chaos of post-waiver wire
-- Balance aggression with budget conservation
-- Look ahead to future weeks and playoffs`;
+- Justify every recommendation by opportunity/role/matchup reasoning, not the player's last game alone.
+- Adapt quickly to changed circumstances and find value in the post-waiver chaos.
+- Look ahead to future weeks and the fantasy playoffs.`;
+
+      case 'trade_analysis':
+        return `TRADE EVALUATION (Week ${week}):
+This is a trade-only review — do not evaluate this week's lineup or waiver wire here.
+
+FOCUS AREAS (in order):
+1. TEAM CONTEXT FIRST: Establish contender (competing this season) vs. rebuilder (building long-term value) before valuing anyone — the same trade can be correctly "accept" for one and "reject" for the other with an identical value delta. A contender prioritizes proven, high-floor production and weeks 15-17 (fantasy playoff) schedule strength, and can reasonably overpay in season-long value using bench depth. A rebuilder sells veteran/name-value assets at their peak for youth, upside, or draft capital.
+2. REPLACEMENT-LEVEL (VORP) LENS: Don't compare players by raw projected points alone — value is how far a player beats the streamable waiver-wire option at his position. Watch for tier-emptying effects: an injury or bye that thins a position leaguewide raises replacement level and quietly increases the value of everyone remaining there.
+3. OPPORTUNITY VS BOX SCORE: Separate recent output from underlying role (snap/target share, red-zone role) for every player in the deal — flag buy-low targets whose role outpaces production, and flag regression risks whose production outpaces role.
+4. CONSOLIDATION TRADEOFFS: Weigh multiple-players-for-one-star deals against depth needs — recommend only when the team giving up quantity has genuine surplus and can absorb thinner depth; warn against it for a bye/injury-fragile roster.
+5. RISK-ADJUSTMENT: Discount for injury status/recency (an "Out" tag is a much bigger discount than "Questionable"; a recently-returned player carries workload-ramp risk) and role security (is his share locked in, or contested by a teammate).
+6. BOTH SIDES OF THE DEAL: A trade that doesn't plausibly serve the partner's roster needs and context is a wish-list, not a real recommendation — say so if you can't construct a case for the other side.
+
+Key Principles:
+- Explicitly guard against recency bias (over-indexing on 1-2 games), name-brand bias (draft pedigree over current role), and box-score fixation (crediting unsustainable touchdown/garbage-time output as skill).
+- Always name a real trade partner and a real player from their actual roster — never a hypothetical player, and never a player from the free-agent pool.
+- If no realistic partner/need exists, say so explicitly rather than inventing one.`;
 
       default:
         return 'General fantasy football analysis focusing on optimal decision-making.';
@@ -210,8 +222,9 @@ Key Principles:
         
       case 'monday_analysis':
       case 'tuesday_waivers':
+      case 'trade_analysis':
         return baseMCPTools;
-        
+
       default:
         return baseMCPTools;
     }

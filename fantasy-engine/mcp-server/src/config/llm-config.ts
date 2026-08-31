@@ -27,6 +27,15 @@ export class LLMConfigManager {
   getAvailableProviders(): LLMConfigOption[] {
     return [
       {
+        provider: 'deepseek',
+        name: 'DeepSeek',
+        models: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner'],
+        description: 'DeepSeek\'s native API - deepseek-v4-flash is a fast, low-cost MoE model with a 1M-token context and native tool calling',
+        pricing_note: 'Pay-per-use: ~$0.22-0.66 per million tokens off-peak for deepseek-v4-flash',
+        setup_instructions: 'Get API key from https://platform.deepseek.com/api_keys',
+        env_variables: ['DEEPSEEK_API_KEY', 'DEEPSEEK_MODEL']
+      },
+      {
         provider: 'openrouter',
         name: 'OpenRouter',
         models: ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'anthropic/claude-3.5-sonnet', 'google/gemini-2.0-flash-exp'],
@@ -96,6 +105,17 @@ export class LLMConfigManager {
   }
 
   private loadFromEnvironment(): LLMConfig | null {
+    // Check for DeepSeek
+    if (process.env.DEEPSEEK_API_KEY) {
+      return {
+        provider: 'deepseek',
+        model: process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash',
+        api_key: process.env.DEEPSEEK_API_KEY,
+        max_tokens: parseInt(process.env.DEEPSEEK_MAX_TOKENS || '4000'),
+        temperature: parseFloat(process.env.DEEPSEEK_TEMPERATURE || '0.7')
+      };
+    }
+
     // Check for OpenRouter
     if (process.env.OPENROUTER_API_KEY) {
       return {

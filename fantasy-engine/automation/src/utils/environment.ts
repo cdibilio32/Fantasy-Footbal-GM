@@ -54,6 +54,7 @@ export function validateEnvironment(): {
   const optional = [
     'LEAGUE_1_ID',
     'LEAGUE_1_TEAM_ID',
+    'DEEPSEEK_API_KEY',
     'OPENROUTER_API_KEY',
     'GEMINI_API_KEY',
     'CLAUDE_API_KEY',
@@ -64,7 +65,7 @@ export function validateEnvironment(): {
   const hasLLM = optional.slice(2).some(env => process.env[env]); // Check for any LLM key
 
   if (!hasLLM) {
-    missing.push('At least one LLM API key (OPENROUTER_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY, or OPENAI_API_KEY)');
+    missing.push('At least one LLM API key (DEEPSEEK_API_KEY, OPENROUTER_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY, or OPENAI_API_KEY)');
   }
   
   return {

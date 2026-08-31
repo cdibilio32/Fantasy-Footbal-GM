@@ -4,6 +4,7 @@ import { OpenAIProvider } from './providers/openai.js';
 import { PerplexityProvider } from './providers/perplexity.js';
 import { GeminiProvider } from './providers/gemini.js';
 import { OpenRouterProvider } from './providers/openrouter.js';
+import { DeepSeekProvider } from './providers/deepseek.js';
 import { costMonitor } from '../costMonitor.js';
 
 export class LLMManager {
@@ -36,6 +37,9 @@ export class LLMManager {
           break;
         case 'openrouter':
           provider = new OpenRouterProvider(config);
+          break;
+        case 'deepseek':
+          provider = new DeepSeekProvider(config);
           break;
         default:
           throw new Error(`Unsupported provider: ${config.provider}`);
@@ -95,6 +99,9 @@ export class LLMManager {
         break;
       case 'openrouter':
         provider = new OpenRouterProvider(tempConfig);
+        break;
+      case 'deepseek':
+        provider = new DeepSeekProvider(tempConfig);
         break;
       default:
         return [];
