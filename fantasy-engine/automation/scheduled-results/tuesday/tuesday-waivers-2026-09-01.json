@@ -1,0 +1,67 @@
+{
+  "week": 1,
+  "recommendations": [],
+  "coordination": {
+    "strategy": "balanced",
+    "conflictsResolved": 0,
+    "totalBudgetAllocated": 15
+  },
+  "coordinatedWaivers": {
+    "success": true,
+    "strategy": "balanced",
+    "conflictsResolved": 0,
+    "totalBudgetAllocated": 15,
+    "recommendations": []
+  },
+  "abTestSummary": {
+    "recommendations": [],
+    "insights": []
+  },
+  "finalCostAnalysis": {
+    "summary": {
+      "totalCost": 0,
+      "dailyCost": 0,
+      "weeklyCost": 0,
+      "monthlyCost": 0,
+      "projectedMonthlyCost": 0
+    },
+    "usage": {
+      "daily": {
+        "used": 0,
+        "limit": 1,
+        "percentage": 0
+      },
+      "weekly": {
+        "used": 0,
+        "limit": 5,
+        "percentage": 0
+      },
+      "monthly": {
+        "used": 0,
+        "limit": 20,
+        "percentage": 0
+      }
+    },
+    "optimizations": [],
+    "recommendations": []
+  },
+  "aiWorkflowResult": {
+    "success": false,
+    "error": "LLM manager not initialized",
+    "task": "tuesday_waivers",
+    "week": 1,
+    "leagues": [],
+    "summary": {
+      "keyInsights": [
+        "Analysis failed: LLM manager not initialized"
+      ],
+      "confidence": 0,
+      "dataSourcesUsed": [
+        "Error"
+      ]
+    },
+    "recommendations": [],
+    "timestamp": "2026-09-01T18:02:11.358Z"
+  },
+  "timestamp": "2026-09-01T18:02:11.359Z"
+}
