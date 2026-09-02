@@ -1,0 +1,25 @@
+{
+  "task": "additional_analysis",
+  "week": 1,
+  "leagues": [],
+  "prompt": "Perform a mid-week roster check-in: review updated injury designations and practice reports, preview upcoming matchups and game scripts, flag bye-week planning needs for the next 2-3 weeks, and identify any stash/watch-list players worth monitoring before the waiver period reopens.",
+  "result": {
+    "success": false,
+    "error": "LLM manager not initialized",
+    "task": "additional_analysis",
+    "week": 1,
+    "leagues": [],
+    "summary": {
+      "keyInsights": [
+        "Analysis failed: LLM manager not initialized"
+      ],
+      "confidence": 0,
+      "dataSourcesUsed": [
+        "Error"
+      ]
+    },
+    "recommendations": [],
+    "timestamp": "2026-09-02T18:25:01.771Z"
+  },
+  "timestamp": "2026-09-02T18:25:01.772Z"
+}
