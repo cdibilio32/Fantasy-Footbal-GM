@@ -1,0 +1,45 @@
+[
+  {
+    "id": "rec_1788999029153_6ny15d6e9",
+    "timestamp": "2026-09-10T00:10:29.153Z",
+    "type": "lineup_optimization",
+    "week": 2,
+    "leagueId": "801088097",
+    "teamId": "13",
+    "recommendation": {
+      "id": "basic_rec_1788999029153",
+      "type": "lineup_optimization",
+      "confidence": 61.455983918983634,
+      "recommendation": "Rule-based lineup_optimization recommendation",
+      "details": {}
+    },
+    "confidence": 61.455983918983634,
+    "dataSourcesUsed": [
+      "basic"
+    ],
+    "llmUsed": false,
+    "cost": 0
+  },
+  {
+    "id": "rec_1788999142602_nmn30ec8z",
+    "timestamp": "2026-09-10T00:12:22.602Z",
+    "type": "lineup",
+    "week": 2,
+    "leagueId": "801088097",
+    "teamId": "13",
+    "recommendation": {
+      "analysis": "thursday_optimization",
+      "timestamp": "1788999142601"
+    },
+    "confidence": 85,
+    "dataSourcesUsed": [
+      "espn",
+      "fantasypros",
+      "weather",
+      "ai_workflow"
+    ],
+    "llmUsed": true,
+    "llmModel": "gemini-2.0-flash-exp",
+    "cost": 0
+  }
+]
