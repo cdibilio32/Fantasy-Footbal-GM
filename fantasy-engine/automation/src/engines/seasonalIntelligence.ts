@@ -482,9 +482,14 @@ export class MultiSeasonIntelligenceEngine {
   }
 
   private getCurrentWeek(): number {
-    // Calculate current NFL week
+    // NFL Week 1 kicks off the Thursday following Labor Day (the first Monday of
+    // September), not a flat September 1st - that drifts by up to a week depending
+    // on what weekday September 1st falls on.
     const now = new Date();
-    const seasonStart = new Date(now.getFullYear(), 8, 1); // September 1st
+    const sept1 = new Date(now.getFullYear(), 8, 1);
+    const daysUntilMonday = (1 - sept1.getDay() + 7) % 7;
+    const laborDay = new Date(now.getFullYear(), 8, 1 + daysUntilMonday);
+    const seasonStart = new Date(now.getFullYear(), 8, laborDay.getDate() + 3);
     const weeksSinceStart = Math.floor((now.getTime() - seasonStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
     return Math.max(1, Math.min(18, weeksSinceStart + 1));
   }

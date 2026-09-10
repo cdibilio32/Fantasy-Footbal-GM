@@ -18,13 +18,22 @@ export class ESPNApiService {
   // Get current NFL week for the configured season
   private getCurrentWeek(): number {
     const now = new Date();
-    const seasonStart = new Date(this.year, 8, 1); // September 1 of the configured season
-    const timeDiff = now.getTime() - seasonStart.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    
+    const seasonStart = this.getNflWeek1Kickoff(this.year);
+    const daysDiff = Math.floor((now.getTime() - seasonStart.getTime()) / (1000 * 3600 * 24));
+
     // If before season starts, return 1. Otherwise calculate week
-    if (daysDiff <= 0) return 1;
-    return Math.min(Math.ceil(daysDiff / 7), 18); // Cap at week 18
+    if (daysDiff < 0) return 1;
+    return Math.min(Math.floor(daysDiff / 7) + 1, 18); // Cap at week 18
+  }
+
+  // NFL Week 1 kicks off the Thursday following Labor Day (the first Monday of September).
+  // A flat "September 1st" assumption drifts by up to a week depending on what weekday
+  // September 1st falls on, so compute Labor Day first and offset from there.
+  private getNflWeek1Kickoff(year: number): Date {
+    const sept1 = new Date(year, 8, 1);
+    const daysUntilMonday = (1 - sept1.getDay() + 7) % 7;
+    const laborDay = new Date(year, 8, 1 + daysUntilMonday);
+    return new Date(year, 8, laborDay.getDate() + 3);
   }
 
   constructor() {

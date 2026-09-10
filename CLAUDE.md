@@ -60,6 +60,24 @@ cd fantasy-engine/mcp-server
 npm test
 ```
 
+### Running Day Commands (thursday/tuesday/monday/sunday/workflow) from a Claude Code Session
+
+Do **not** try to trigger these via GitHub Actions `workflow_dispatch` (e.g. `mcp__github__actions_run_trigger`) — the Claude GitHub App installed on this repo does not have `actions:write`, so dispatch calls fail with `403 Resource not accessible by integration`. This is a permissions issue on the App install, not a bug to work around with retries.
+
+Instead, run the automation CLI directly through the Claude Code session's own tools (Bash), the same way the GitHub Action itself would, since the session already carries the needed credentials as environment variables (`ESPN_S2`, `ESPN_SWID`, `ESPN_LEAGUE_ID`, `ESPN_TEAM_ID`, `OPENROUTER_API_KEY`):
+
+```bash
+cd fantasy-engine/automation
+npm install && npm run build
+node dist/cli.js thursday --league "$ESPN_LEAGUE_ID" --team "$ESPN_TEAM_ID"
+# swap `thursday` for tuesday / monday / sunday / `workflow --task <task>` as needed
+```
+
+Notes:
+- These commands only **generate recommendations** (and write a `*_results.json` file) — none of them call an ESPN write/set-lineup endpoint, so a human still has to apply lineup/waiver/trade changes on ESPN manually.
+- After a manual run, archive the result to match the GitHub Action's convention so it's easy to find later: copy `<day>_results.json` into `fantasy-engine/automation/scheduled-results/<day>/<day>-<label>-<YYYY-MM-DD>.json` and also to `scheduled-results/<day>/latest.json`, then commit and push both the result file and the archive copy.
+- Run this ahead of the normal schedule whenever the usual day's routine would otherwise fire too late (e.g. a Thursday Night Football game moved to Wednesday) — don't wait for the cron.
+
 ## High-Level Architecture
 
 ### ESPN Authentication System
@@ -193,3 +211,4 @@ brew install chromium
 3. **Use existing LLM providers** in `shared/src/services/llm/`
 4. **Follow TypeScript patterns** - strict typing throughout
 5. **Test locally first** before pushing GitHub Actions changes
+6. **Run day commands (thursday/tuesday/monday/sunday/workflow) directly via the CLI in-session** (see "Running Day Commands" above) rather than dispatching the GitHub Actions workflow — the Claude GitHub App lacks `actions:write` on this repo
