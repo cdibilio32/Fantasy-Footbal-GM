@@ -873,10 +873,11 @@ async function generateResponseWithWebSearchTools(prompt: string): Promise<{ con
         tools: [webSearchTool],
         // Reasoning models (e.g. openrouter's gpt-oss-20b) spend part of this
         // budget on hidden reasoning before the visible answer - with the
-        // larger prompts this workflow now sends (full-league roster data),
-        // 4000 was getting exhausted by reasoning alone, leaving 0 visible
-        // content (finish_reason: "length"). Give it more headroom.
-        max_tokens: 8000,
+        // larger prompts this workflow now sends (full-league roster data
+        // across every team, as trade_analysis does), 8000 was still getting
+        // exhausted by reasoning alone, leaving 0 visible content
+        // (finish_reason: "length"). Give it more headroom.
+        max_tokens: 16000,
         temperature: 0.7,
         tool_choice: 'auto'
       });
