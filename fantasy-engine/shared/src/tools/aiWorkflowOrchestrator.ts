@@ -130,21 +130,28 @@ Rank adds by priority, highest first. If a position has no priority add this wee
         instructions: `TRADE EVALUATION — WEEK ${toWords(week)}:
 This is a trade-only review. Do not evaluate this week's lineup or waiver wire here.
 
-FOCUS AREAS (in order):
-1. Before valuing anyone, establish team context: are you a contender (competing for a title this season) or a rebuilder (building long-term value)? A contender should prioritize proven, high-floor immediate production and weeks 15-17 (fantasy playoff) schedule strength, and can reasonably overpay in season-long value using bench depth. A rebuilder should do the opposite: sell veteran/name-value assets at their peak for youth, unrealized upside, or draft capital.
-2. Don't compare players by raw projected points alone: apply a replacement-level lens. A player's real trade value is how far he beats the streamable waiver-wire option at his position, not his point total in isolation. Watch for tier-emptying effects — an injury or bye that thins a position leaguewide raises replacement level and quietly increases the value of everyone remaining there.
-3. Separate recent box-score output from underlying opportunity (snap share, target share, red-zone role) for every player in the deal: flag buy-low targets whose role outpaces their production, and flag targets to avoid whose production outpaces their role (touchdown-dependent, due for regression).
-4. Weigh consolidation (multiple useful players for one difference-maker) against depth needs: recommend it only when the team giving up quantity has genuine surplus there and can absorb thinner depth; warn against it for a team already fragile to byes/injury.
-5. Risk-adjust every player in the deal for injury status/recency (an "Out" tag is a much bigger discount than "Questionable"; a recently-returned player carries workload-ramp risk beyond his tag), and for role security (is his target/carry share locked in, or contested by a teammate who could take it back).
-6. Evaluate the trade from BOTH teams' perspectives. A trade that doesn't plausibly serve the partner's roster needs and context is a wish-list, not a realistic recommendation — say so if you can't construct a case for the other side.
-7. Explicitly call out if you're at risk of recency bias (over-indexing on the last one to two games), name-brand bias (valuing draft pedigree over current role), or box-score fixation (crediting an unsustainable touchdown rate or garbage-time output as skill) before finalizing a recommendation.
+PROCESS (follow in this order):
+1. IDENTIFY YOUR WEAKNESSES: Use any weakness the user states directly in the prompt/preferences below if present; otherwise find it from the roster data — a position whose starter's actual output has trailed his projection across multiple weeks (not just one bad week), a position where your player(s) rank below the same position on other rostered teams in this league, or a position carrying real injury/return-timeline risk with no reliable roster answer.
+2. IDENTIFY YOUR STRENGTHS (TRADE CAPITAL): Find positions where you roster more startable-quality players than your lineup needs. Within that surplus, weigh three things before naming trade capital: (a) rest-of-season outlook, not season-to-date total alone — a player trending down matters more than his total so far; (b) low week-to-week variance as a reason to KEEP a player, since a consistent producer is harder to replace than his average alone suggests; (c) sell-high trade bait — a player who has scored very well recently or this season but whose underlying role (touchdown-dependent, contested target/carry share, unsustainable efficiency) doesn't support repeating it: flag him as a trade-away candidate now, at peak value, rather than a hold.
+3. FIND A TWO-SIDED FIT: Scan the OTHER TEAMS list for a team that BOTH has surplus/depth at a position from your weakness list (so they can spare a piece there) AND has a need at a position from your strength list (so they'd actually want what you're offering). A team satisfying only one side is not a real partner — say so and move on rather than forcing it.
+4. PROPOSE THE TRADE(S): For each team that clears step 3, propose a concrete trade. Proposing more than one option — either multiple partners, or multiple packages with the same partner — is encouraged whenever more than one real fit exists.
+
+Within every proposal from step 4, still apply:
+- A replacement-level (VORP) lens, not raw projected points: a player's value is how far he beats the streamable waiver-wire option at his position, and watch for tier-emptying effects (an injury or bye that thins a position leaguewide raises replacement level for everyone left there).
+- Separation of recent box-score output from underlying opportunity (snap share, target share, red-zone role) for both players in the deal.
+- Risk-adjustment for injury status/recency (an "Out" tag is a much bigger discount than "Questionable"; a recently-returned player carries workload-ramp risk beyond his tag) and role security (is his share locked in, or contested by a teammate).
+- Contender-vs-rebuilder framing for your own team: state which you are and let it drive whether you prioritize immediate high-floor production and weeks 15-17 schedule strength (contender) or youth/upside/long-term value (rebuilder).
+- Both-sides realism: the deal must plausibly serve the partner's actual roster construction, not just yours — say so explicitly if you can't construct a case for their side.
+- An explicit bias check: flag if you're at risk of recency bias (over-indexing on the last one to two games), name-brand bias (valuing draft pedigree over current role), or box-score fixation (crediting an unsustainable touchdown rate or garbage-time output as skill) before finalizing.
 
 RESPONSE FORMAT: you MUST name a specific team from the "OTHER TEAMS" list below (including its ESPN Team ID) and a specific real player currently on that team's roster, copy-pasted verbatim from that team's block — never a hypothetical player, and never a player from the "AVAILABLE WAIVER WIRE/FREE AGENT PLAYERS" list (those are zero-owned free agents, not tradeable). Use this exact structure:
-"TRADE [Your Player] ([Position]) to [Team Name] (Team ID [N]) for [Their Player] ([Position])
+"WEAKNESSES: [positions/players identified in step 1, with the signal behind each]
+STRENGTHS / TRADE CAPITAL: [positions/players identified in step 2, flagging any sell-high candidate explicitly]
+TRADE OPTION [N] — TRADE [Your Player] ([Position]) to [Team Name] (Team ID [N]) for [Their Player] ([Position])
 CONTEXT: [contender/rebuilder framing for your team]
 WHY IT WORKS FOR BOTH SIDES: [your side's gain] / [their side's gain, tied to their actual roster construction]
 RISK: [the single biggest risk-adjustment factor in this deal]"
-If no team in the OTHER TEAMS list has a matching need/surplus for a realistic trade, say so explicitly instead of inventing a partner.`
+Repeat the "TRADE OPTION" block for each proposal. If no team in the OTHER TEAMS list clears step 3, say so explicitly instead of inventing a partner.`
       };
 
     default:
