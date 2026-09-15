@@ -167,7 +167,7 @@ PROCESS (in order):
 1. IDENTIFY WEAKNESSES: Use any weakness the user states directly; otherwise find it from roster data — a position whose actual output has trailed projection across multiple weeks, a position ranking below the same position on other rostered teams, or a position carrying real injury/return-timeline risk with no roster answer.
 2. IDENTIFY STRENGTHS (TRADE CAPITAL): Find positions with more startable-quality players than lineup needs. Weigh rest-of-season outlook (not season-to-date total alone), low week-to-week variance as a reason to KEEP a player, and sell-high trade bait — a player performing well now on an unsustainable role (touchdown-dependent, contested share) who should be moved at peak value rather than held.
 3. FIND A TWO-SIDED FIT: A real partner must BOTH have surplus at a position from your weakness list AND a need at a position from your strength list. A team satisfying only one side isn't a real partner.
-4. PROPOSE: For each team clearing step 3, propose a concrete trade — multiple options (different partners or packages) are encouraged when more than one fit exists.
+4. PROPOSE: For each team clearing step 3, run a value check before finalizing any option — pull and state BOTH players' season points to date, last 1-2 games, next-week projection, and rest-of-season projection; compare the deltas directly and reject any option where one side is clearly the worse player (a team has no reason to accept a downgrade). Using the RECEIVING team's actual roster, name the specific player your piece would start over — if it wouldn't crack their lineup over anyone they already roster, it isn't a real need for them. Only propose trades that pass this check; multiple options (different partners or packages) are encouraged when more than one value-balanced fit exists.
 
 Within each proposal, still apply:
 - REPLACEMENT-LEVEL (VORP) LENS over raw projected points; watch for tier-emptying effects (an injury or bye that thins a position leaguewide raises replacement level for everyone remaining there).
@@ -177,9 +177,10 @@ Within each proposal, still apply:
 - BOTH SIDES OF THE DEAL: it must plausibly serve the partner's actual roster needs and context, not just yours — say so if you can't construct a case for their side.
 
 Key Principles:
+- State each traded player's stats (season points, next-week projection, ROS projection) and the specific roster player they'd replace on the receiving team — never propose a deal without both.
 - Explicitly guard against recency bias (over-indexing on 1-2 games), name-brand bias (draft pedigree over current role), and box-score fixation (crediting unsustainable touchdown/garbage-time output as skill).
 - Always name a real trade partner and a real player from their actual roster — never a hypothetical player, and never a player from the free-agent pool.
-- If no team clears step 3, say so explicitly rather than inventing one.`;
+- If no team clears step 3 with a value-balanced fit, say so explicitly rather than inventing one or forcing a lopsided deal.`;
 
       default:
         return 'General fantasy football analysis focusing on optimal decision-making.';
