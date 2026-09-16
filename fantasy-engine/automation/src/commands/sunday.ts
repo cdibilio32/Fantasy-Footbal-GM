@@ -22,8 +22,8 @@ export async function executeSundayCheck(options: SundayOptions): Promise<Sunday
   // Get league configuration
   const leagues = [
     {
-      leagueId: process.env.LEAGUE_1_ID || process.env.LEAGUE_ID_1,
-      teamId: process.env.LEAGUE_1_TEAM_ID || process.env.TEAM_ID_1,
+      leagueId: process.env.LEAGUE_1_ID || process.env.LEAGUE_ID_1 || process.env.ESPN_LEAGUE_ID,
+      teamId: process.env.LEAGUE_1_TEAM_ID || process.env.TEAM_ID_1 || process.env.ESPN_TEAM_ID,
       name: process.env.LEAGUE_1_NAME || 'League 1'
     },
     {

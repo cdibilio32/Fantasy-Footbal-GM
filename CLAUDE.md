@@ -69,9 +69,11 @@ Instead, run the automation CLI directly through the Claude Code session's own t
 ```bash
 cd fantasy-engine/automation
 npm install && npm run build
-node dist/cli.js thursday --league "$ESPN_LEAGUE_ID" --team "$ESPN_TEAM_ID"
+node dist/cli.js thursday
 # swap `thursday` for tuesday / monday / sunday / `workflow --task <task>` as needed
 ```
+
+`ESPN_LEAGUE_ID`/`ESPN_TEAM_ID` are picked up automatically as a fallback (after `LEAGUE_1_ID`/`LEAGUE_1_TEAM_ID`, the vars the GitHub Action sets) — no `--league`/`--team` flags needed, and `tuesday`/`monday`/`sunday` don't accept those flags at all (only `thursday` does, as an override: `--league <id> --team <id>`).
 
 Notes:
 - These commands only **generate recommendations** (and write a `*_results.json` file) — none of them call an ESPN write/set-lineup endpoint, so a human still has to apply lineup/waiver/trade changes on ESPN manually.

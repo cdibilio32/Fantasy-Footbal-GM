@@ -30,7 +30,7 @@ export async function initializeEnvironment(): Promise<void> {
   
   // Test ESPN connection with a simple API call
   try {
-    const leagueId = process.env.LEAGUE_1_ID || process.env.LEAGUE_ID_1;
+    const leagueId = process.env.LEAGUE_1_ID || process.env.LEAGUE_ID_1 || process.env.ESPN_LEAGUE_ID;
     if (leagueId) {
       const leagueInfo = await espnApi.getLeagueInfo(leagueId);
       console.log(`✅ ESPN connection verified - League: ${leagueInfo.name}`);

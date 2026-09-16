@@ -32,8 +32,8 @@ export async function executeThursdayOptimization(options: ThursdayOptions): Pro
   // Get league configuration from environment
   const leagues = [
     {
-      leagueId: options.leagueId || process.env.LEAGUE_1_ID || process.env.LEAGUE_ID_1,
-      teamId: options.teamId || process.env.LEAGUE_1_TEAM_ID || process.env.TEAM_ID_1,
+      leagueId: options.leagueId || process.env.LEAGUE_1_ID || process.env.LEAGUE_ID_1 || process.env.ESPN_LEAGUE_ID,
+      teamId: options.teamId || process.env.LEAGUE_1_TEAM_ID || process.env.TEAM_ID_1 || process.env.ESPN_TEAM_ID,
       name: process.env.LEAGUE_1_NAME || 'League 1'
     },
     {
