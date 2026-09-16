@@ -130,21 +130,36 @@ Rank adds by priority, highest first. If a position has no priority add this wee
         instructions: `TRADE EVALUATION — WEEK ${toWords(week)}:
 This is a trade-only review. Do not evaluate this week's lineup or waiver wire here.
 
-FOCUS AREAS (in order):
-1. Before valuing anyone, establish team context: are you a contender (competing for a title this season) or a rebuilder (building long-term value)? A contender should prioritize proven, high-floor immediate production and weeks 15-17 (fantasy playoff) schedule strength, and can reasonably overpay in season-long value using bench depth. A rebuilder should do the opposite: sell veteran/name-value assets at their peak for youth, unrealized upside, or draft capital.
-2. Don't compare players by raw projected points alone: apply a replacement-level lens. A player's real trade value is how far he beats the streamable waiver-wire option at his position, not his point total in isolation. Watch for tier-emptying effects — an injury or bye that thins a position leaguewide raises replacement level and quietly increases the value of everyone remaining there.
-3. Separate recent box-score output from underlying opportunity (snap share, target share, red-zone role) for every player in the deal: flag buy-low targets whose role outpaces their production, and flag targets to avoid whose production outpaces their role (touchdown-dependent, due for regression).
-4. Weigh consolidation (multiple useful players for one difference-maker) against depth needs: recommend it only when the team giving up quantity has genuine surplus there and can absorb thinner depth; warn against it for a team already fragile to byes/injury.
-5. Risk-adjust every player in the deal for injury status/recency (an "Out" tag is a much bigger discount than "Questionable"; a recently-returned player carries workload-ramp risk beyond his tag), and for role security (is his target/carry share locked in, or contested by a teammate who could take it back).
-6. Evaluate the trade from BOTH teams' perspectives. A trade that doesn't plausibly serve the partner's roster needs and context is a wish-list, not a realistic recommendation — say so if you can't construct a case for the other side.
-7. Explicitly call out if you're at risk of recency bias (over-indexing on the last one to two games), name-brand bias (valuing draft pedigree over current role), or box-score fixation (crediting an unsustainable touchdown rate or garbage-time output as skill) before finalizing a recommendation.
+POSITION SURPLUS/DEFICIT RULE (apply this in steps 1 and 3 below to judge ANY team's strength or weakness at a position — yours or a partner's): pull and weigh together, for every player that team rosters at the position: (a) the number of players rostered there, (b) each player's season points to date, (c) each player's next-week and rest-of-season projection, and (d) each player's position rank. A DEFICIT is a position where the team rosters few players there AND/OR the players it has grade out low on points/projection/rank. A SURPLUS is a position where the team rosters more players than its lineup needs AND those extra players still grade out at a startable level — a high body count of replacement-level players is NOT a surplus.
+
+PROCESS (follow in this order):
+1. IDENTIFY YOUR WEAKNESSES: Use any weakness the user states directly in the prompt/preferences below if present; otherwise find it by applying the POSITION SURPLUS/DEFICIT RULE above to your own roster — a position that grades out as a deficit, a starter whose actual output has trailed his projection across multiple weeks (not just one bad week), or a position carrying real injury/return-timeline risk with no reliable roster answer.
+2. IDENTIFY YOUR STRENGTHS (TRADE CAPITAL): Find positions that grade out as a surplus under the rule above. Within that surplus, weigh three things before naming trade capital: (a) rest-of-season outlook, not season-to-date total alone — a player trending down matters more than his total so far; (b) low week-to-week variance as a reason to KEEP a player, since a consistent producer is harder to replace than his average alone suggests; (c) sell-high trade bait — a player who has scored very well recently or this season but whose underlying role (touchdown-dependent, contested target/carry share, unsustainable efficiency) doesn't support repeating it: flag him as a trade-away candidate now, at peak value, rather than a hold.
+3. FIND A TWO-SIDED FIT: Apply the POSITION SURPLUS/DEFICIT RULE to each team in the OTHER TEAMS list. A real partner must BOTH grade out as a surplus at a position from your weakness list (so they can spare a piece there) AND grade out as a deficit at a position from your strength list (so they'd actually want what you're offering). A team satisfying only one side is not a real partner — say so and move on rather than forcing it.
+4. PROPOSE THE TRADE(S): For each team that clears step 3, propose a concrete trade. Before finalizing any option, run this value check — do not skip it:
+   a. Pull and state BOTH players' actual numbers: season points to date, points in the last one to two games, next-week projection, and rest-of-season projection.
+   b. Compare those numbers directly — next-week projection delta and season-pace delta — and reject any option where one side is clearly giving up a far more valuable player (e.g. a bench-caliber season total and projection for a clear weekly starter at a scarce position). A team has no reason to accept a trade that plainly downgrades them; if you can't find a fit close enough in value for a specific partner, say so instead of proposing a lopsided deal.
+   c. Using the RECEIVING team's actual roster, name the specific player your incoming piece would start over in their lineup. If it wouldn't crack their starting lineup over anyone they already roster, this isn't a real need for them — do not propose it as one.
+   Proposing more than one option — either multiple partners, or multiple packages with the same partner — is encouraged whenever more than one real, value-balanced fit exists.
+
+Within every proposal from step 4, still apply:
+- A replacement-level (VORP) lens, not raw projected points: a player's value is how far he beats the streamable waiver-wire option at his position, and watch for tier-emptying effects (an injury or bye that thins a position leaguewide raises replacement level for everyone left there).
+- Separation of recent box-score output from underlying opportunity (snap share, target share, red-zone role) for both players in the deal.
+- Risk-adjustment for injury status/recency (an "Out" tag is a much bigger discount than "Questionable"; a recently-returned player carries workload-ramp risk beyond his tag) and role security (is his share locked in, or contested by a teammate).
+- Contender-vs-rebuilder framing for your own team: state which you are and let it drive whether you prioritize immediate high-floor production and weeks 15-17 schedule strength (contender) or youth/upside/long-term value (rebuilder).
+- Both-sides realism: the deal must plausibly serve the partner's actual roster construction, not just yours — say so explicitly if you can't construct a case for their side.
+- An explicit bias check: flag if you're at risk of recency bias (over-indexing on the last one to two games), name-brand bias (valuing draft pedigree over current role), or box-score fixation (crediting an unsustainable touchdown rate or garbage-time output as skill) before finalizing.
 
 RESPONSE FORMAT: you MUST name a specific team from the "OTHER TEAMS" list below (including its ESPN Team ID) and a specific real player currently on that team's roster, copy-pasted verbatim from that team's block — never a hypothetical player, and never a player from the "AVAILABLE WAIVER WIRE/FREE AGENT PLAYERS" list (those are zero-owned free agents, not tradeable). Use this exact structure:
-"TRADE [Your Player] ([Position]) to [Team Name] (Team ID [N]) for [Their Player] ([Position])
+"WEAKNESSES: [positions/players identified in step 1, with the signal behind each]
+STRENGTHS / TRADE CAPITAL: [positions/players identified in step 2, flagging any sell-high candidate explicitly]
+TRADE OPTION [N] — TRADE [Your Player] ([Position], season pts: [X], last 2 games: [Y], next-week proj: [Z], ROS proj: [W]) to [Team Name] (Team ID [N]) for [Their Player] ([Position], season pts: [X], last 2 games: [Y], next-week proj: [Z], ROS proj: [W])
+VALUE CHECK: [next-week and season-pace delta between the two players — confirm this is close enough in value that the other team would realistically accept]
+REPLACES: [the specific player on the receiving team's roster this piece would start over, from their actual roster]
 CONTEXT: [contender/rebuilder framing for your team]
 WHY IT WORKS FOR BOTH SIDES: [your side's gain] / [their side's gain, tied to their actual roster construction]
 RISK: [the single biggest risk-adjustment factor in this deal]"
-If no team in the OTHER TEAMS list has a matching need/surplus for a realistic trade, say so explicitly instead of inventing a partner.`
+Repeat the "TRADE OPTION" block for each proposal. If no team in the OTHER TEAMS list clears step 3 with a value-balanced fit, say so explicitly instead of inventing a partner or forcing a lopsided deal.`
       };
 
     default:
@@ -873,10 +888,11 @@ async function generateResponseWithWebSearchTools(prompt: string): Promise<{ con
         tools: [webSearchTool],
         // Reasoning models (e.g. openrouter's gpt-oss-20b) spend part of this
         // budget on hidden reasoning before the visible answer - with the
-        // larger prompts this workflow now sends (full-league roster data),
-        // 4000 was getting exhausted by reasoning alone, leaving 0 visible
-        // content (finish_reason: "length"). Give it more headroom.
-        max_tokens: 8000,
+        // larger prompts this workflow now sends (full-league roster data
+        // across every team, as trade_analysis does), 8000 was still getting
+        // exhausted by reasoning alone, leaving 0 visible content
+        // (finish_reason: "length"). Give it more headroom.
+        max_tokens: 16000,
         temperature: 0.7,
         tool_choice: 'auto'
       });

@@ -163,18 +163,26 @@ Key Principles:
         return `TRADE EVALUATION (Week ${week}):
 This is a trade-only review — do not evaluate this week's lineup or waiver wire here.
 
-FOCUS AREAS (in order):
-1. TEAM CONTEXT FIRST: Establish contender (competing this season) vs. rebuilder (building long-term value) before valuing anyone — the same trade can be correctly "accept" for one and "reject" for the other with an identical value delta. A contender prioritizes proven, high-floor production and weeks 15-17 (fantasy playoff) schedule strength, and can reasonably overpay in season-long value using bench depth. A rebuilder sells veteran/name-value assets at their peak for youth, upside, or draft capital.
-2. REPLACEMENT-LEVEL (VORP) LENS: Don't compare players by raw projected points alone — value is how far a player beats the streamable waiver-wire option at his position. Watch for tier-emptying effects: an injury or bye that thins a position leaguewide raises replacement level and quietly increases the value of everyone remaining there.
-3. OPPORTUNITY VS BOX SCORE: Separate recent output from underlying role (snap/target share, red-zone role) for every player in the deal — flag buy-low targets whose role outpaces production, and flag regression risks whose production outpaces role.
-4. CONSOLIDATION TRADEOFFS: Weigh multiple-players-for-one-star deals against depth needs — recommend only when the team giving up quantity has genuine surplus and can absorb thinner depth; warn against it for a bye/injury-fragile roster.
-5. RISK-ADJUSTMENT: Discount for injury status/recency (an "Out" tag is a much bigger discount than "Questionable"; a recently-returned player carries workload-ramp risk) and role security (is his share locked in, or contested by a teammate).
-6. BOTH SIDES OF THE DEAL: A trade that doesn't plausibly serve the partner's roster needs and context is a wish-list, not a real recommendation — say so if you can't construct a case for the other side.
+POSITION SURPLUS/DEFICIT RULE (apply in steps 1 and 3 to judge ANY team's strength/weakness at a position — yours or a partner's): weigh together, per player rostered at that position, the number rostered, season points to date, next-week/rest-of-season projection, and position rank. DEFICIT = few players rostered there AND/OR the players it has grade out low on points/projection/rank. SURPLUS = more players rostered than lineup needs AND those extras still grade out at a startable level — a high body count of replacement-level players is NOT a surplus.
+
+PROCESS (in order):
+1. IDENTIFY WEAKNESSES: Use any weakness the user states directly; otherwise find it by applying the rule above to your own roster — a position grading out as a deficit, a starter whose actual output has trailed projection across multiple weeks, or a position carrying real injury/return-timeline risk with no roster answer.
+2. IDENTIFY STRENGTHS (TRADE CAPITAL): Find positions that grade out as a surplus under the rule above. Weigh rest-of-season outlook (not season-to-date total alone), low week-to-week variance as a reason to KEEP a player, and sell-high trade bait — a player performing well now on an unsustainable role (touchdown-dependent, contested share) who should be moved at peak value rather than held.
+3. FIND A TWO-SIDED FIT: Apply the rule above to each OTHER TEAM. A real partner must BOTH grade out as a surplus at a position from your weakness list AND grade out as a deficit at a position from your strength list. A team satisfying only one side isn't a real partner.
+4. PROPOSE: For each team clearing step 3, run a value check before finalizing any option — pull and state BOTH players' season points to date, last 1-2 games, next-week projection, and rest-of-season projection; compare the deltas directly and reject any option where one side is clearly the worse player (a team has no reason to accept a downgrade). Using the RECEIVING team's actual roster, name the specific player your piece would start over — if it wouldn't crack their lineup over anyone they already roster, it isn't a real need for them. Only propose trades that pass this check; multiple options (different partners or packages) are encouraged when more than one value-balanced fit exists.
+
+Within each proposal, still apply:
+- REPLACEMENT-LEVEL (VORP) LENS over raw projected points; watch for tier-emptying effects (an injury or bye that thins a position leaguewide raises replacement level for everyone remaining there).
+- OPPORTUNITY VS BOX SCORE separation (snap/target share, red-zone role) for both players in the deal.
+- RISK-ADJUSTMENT for injury status/recency (an "Out" tag is a much bigger discount than "Questionable"; a recently-returned player carries workload-ramp risk) and role security (is his share locked in, or contested by a teammate).
+- CONTENDER VS REBUILDER framing for your own team: state which you are — a contender prioritizes proven, high-floor production and weeks 15-17 schedule strength and can overpay using bench depth; a rebuilder sells veteran/name-value assets at their peak for youth, upside, or draft capital.
+- BOTH SIDES OF THE DEAL: it must plausibly serve the partner's actual roster needs and context, not just yours — say so if you can't construct a case for their side.
 
 Key Principles:
+- State each traded player's stats (season points, next-week projection, ROS projection) and the specific roster player they'd replace on the receiving team — never propose a deal without both.
 - Explicitly guard against recency bias (over-indexing on 1-2 games), name-brand bias (draft pedigree over current role), and box-score fixation (crediting unsustainable touchdown/garbage-time output as skill).
 - Always name a real trade partner and a real player from their actual roster — never a hypothetical player, and never a player from the free-agent pool.
-- If no realistic partner/need exists, say so explicitly rather than inventing one.`;
+- If no team clears step 3 with a value-balanced fit, say so explicitly rather than inventing one or forcing a lopsided deal.`;
 
       default:
         return 'General fantasy football analysis focusing on optimal decision-making.';

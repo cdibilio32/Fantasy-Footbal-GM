@@ -1,0 +1,48 @@
+{
+  "task": "trade_analysis",
+  "week": 1,
+  "leagues": [
+    {
+      "name": "League 1",
+      "leagueId": "801088097"
+    }
+  ],
+  "prompt": "Evaluate potential trade opportunities and provide recommendations",
+  "result": {
+    "success": true,
+    "task": "trade_analysis",
+    "week": 1,
+    "leagues": [
+      {
+        "leagueId": "801088097",
+        "teamId": "13",
+        "name": "Dibilio Family League"
+      }
+    ],
+    "summary": {
+      "keyInsights": [],
+      "confidence": 95,
+      "dataSourcesUsed": [
+        "ESPN API",
+        "Real LLM Analysis (No FantasyPros)"
+      ],
+      "fullLLMResponse": "**WEAKNESSES**  \n- **QB** – No backup; Matthew Stafford is a low‑floor starter and the team has no reliable alternative.  \n- **D/ST** – Rams D/ST is the only defense; no depth’el.  \n- **K** – Jake Bates is the sole kicker; the team has no backup.\n\n**STRENGTHS / TRADE CAPITAL**  \n- **WR** – A surplus of 8 receivers, including three starters (St. Brown, Flowers, Adams) and a deep bench.  \n  - *Sell‑high candidate*: **Zay Flowers** (season 22.5 pts, last 2 games 14.2, next‑week ~14.2, ROS ~14.2).  \n  - *Backup kicker*: **Jake Bates** (season 8.7 pts, last 2 games 8.7, next‑week ~8.7, ROS ~8.7).  \n\n**TRADE OPTION 1** – **Trade**  \n- **From Team onethree**: **Zay Flowers (WR)** (season 22.5 pts, last 2 games 14.2, next‑week 14.2, ROS 14.2) **+** **Jake Bates (K)** (season 8.7 pts, last 2 games 8.7, next‑week 8.7, ROS 8.7)  \n- **To Team Maye‑a Mia! (Team ID two)**: **Drake Maye (QB)** (season 28.5 pts, last 2 games — , next‑week 28.5, ROS 28.5)\n\n**VALUE CHECK**  \n- Combined value of our package ≈ 22.5 + 8.7 = 31.2 points.  \n- Drake Maye’s value ≈ 28.5 points.  \n- Difference ≈ +2.7 points in our favor – a small, acceptable premium for a starter‑level QB.  \n- Next‑week projection difference: 28.5 vs 14.2 (our WR) – a 14‑point swing, but the trade keeps us competitive for the rest of the season.\n\n**REPLACES**  \n- **Zay Flowers** will slot in as a starter over **Brian Thomas Jr.** or **Drake London** (the two WRs currently on Team ID two).  \n- **Jake Bates** will replace **Harrison Butker** (the lone kicker on Team ID two).  \n\n**CONTEXT**  \n- Our team is a **contender** that needs a high‑floor, consistent QB to push the standings in the final 8 games.  \n- Team ID two is a **rebuilding** roster; they can afford to trade a top‑tier QB for a solid starter at WR and a higher‑quality kicker.\n\n**WHY IT WORKS FOR BOTH SIDES**  \n- **Our side** gains a proven, low‑variance QB (Drake Maye) who will immediately start and fill the critical void at the position.  \n- **Their side** receives a high‑tier WR (Zay Flowers) who can start or provide depth, plus a better kicker (Jake Bates) that boosts their special‑teams value.  \n- Both teams keep a top‑tier player at their remaining position (we keep a strong RB/TE line, they keep a second QB).\n\n**RISK**  \n- **Drake Maye** may be on a bye or have injury risk; the trade is a moderate premium for a starter.  \n- We lose a high‑tier WR; if our season stalls, the value of the trade could regress."
+    },
+    "recommendations": [
+      {
+        "leagueId": "801088097",
+        "teamId": "13",
+        "name": "Dibilio Family League",
+        "changes": [],
+        "analysis": "**WEAKNESSES**  \n- **QB** – No backup; Matthew Stafford is a low‑floor starter and the team has no reliable alternative.  \n- **D/ST** – Rams D/ST is the only defense; no depth’el.  \n- **K** – Jake Bates is the sole kicker; the team has no backup.\n\n**STRENGTHS / TRADE CAPITAL**  \n- **WR** – A surplus of 8 receivers, including three starters (St. Brown, Flowers, Adams) and a deep bench.  \n  - *Sell‑high candidate*: **Zay Flowers** (season 22.5 pts, last 2 games 14.2, next‑week ~14.2, ROS ~14.2).  \n  - *Backup kicker*: **Jake Bates** (season 8.7 pts, last 2 games 8.7, next‑week ~8.7, ROS ~8.7).  \n\n**TRADE OPTION 1** – **Trade**  \n- **From Team onethree**: **Zay Flowers (WR)** (season 22.5 pts, last 2 games 14.2, next‑week 14.2, ROS 14.2) **+** **Jake Bates (K)** (season 8.7 pts, last 2 games 8.7, next‑week 8.7, ROS 8.7)  \n- **To Team Maye‑a Mia! (Team ID two)**: **Drake Maye (QB)** (season 28.5 pts, last 2 games — , next‑week 28.5, ROS 28.5)\n\n**VALUE CHECK**  \n- Combined value of our package ≈ 22.5 + 8.7 = 31.2 points.  \n- Drake Maye’s value ≈ 28.5 points.  \n- Difference ≈ +2.7 points in our favor – a small, acceptable premium for a starter‑level QB.  \n- Next‑week projection difference: 28.5 vs 14.2 (our WR) – a 14‑point swing, but the trade keeps us competitive for the rest of the season.\n\n**REPLACES**  \n- **Zay Flowers** will slot in as a starter over **Brian Thomas Jr.** or **Drake London** (the two WRs currently on Team ID two).  \n- **Jake Bates** will replace **Harrison Butker** (the lone kicker on Team ID two).  \n\n**CONTEXT**  \n- Our team is a **contender** that needs a high‑floor, consistent QB to push the standings in the final 8 games.  \n- Team ID two is a **rebuilding** roster; they can afford to trade a top‑tier QB for a solid starter at WR and a higher‑quality kicker.\n\n**WHY IT WORKS FOR BOTH SIDES**  \n- **Our side** gains a proven, low‑variance QB (Drake Maye) who will immediately start and fill the critical void at the position.  \n- **Their side** receives a high‑tier WR (Zay Flowers) who can start or provide depth, plus a better kicker (Jake Bates) that boosts their special‑teams value.  \n- Both teams keep a top‑tier player at their remaining position (we keep a strong RB/TE line, they keep a second QB).\n\n**RISK**  \n- **Drake Maye** may be on a bye or have injury risk; the trade is a moderate premium for a starter.  \n- We lose a high‑tier WR; if our season stalls, the value of the trade could regress."
+      }
+    ],
+    "llmResponse": {
+      "content": "**WEAKNESSES**  \n- **QB** – No backup; Matthew Stafford is a low‑floor starter and the team has no reliable alternative.  \n- **D/ST** – Rams D/ST is the only defense; no depth’el.  \n- **K** – Jake Bates is the sole kicker; the team has no backup.\n\n**STRENGTHS / TRADE CAPITAL**  \n- **WR** – A surplus of 8 receivers, including three starters (St. Brown, Flowers, Adams) and a deep bench.  \n  - *Sell‑high candidate*: **Zay Flowers** (season 22.5 pts, last 2 games 14.2, next‑week ~14.2, ROS ~14.2).  \n  - *Backup kicker*: **Jake Bates** (season 8.7 pts, last 2 games 8.7, next‑week ~8.7, ROS ~8.7).  \n\n**TRADE OPTION 1** – **Trade**  \n- **From Team onethree**: **Zay Flowers (WR)** (season 22.5 pts, last 2 games 14.2, next‑week 14.2, ROS 14.2) **+** **Jake Bates (K)** (season 8.7 pts, last 2 games 8.7, next‑week 8.7, ROS 8.7)  \n- **To Team Maye‑a Mia! (Team ID two)**: **Drake Maye (QB)** (season 28.5 pts, last 2 games — , next‑week 28.5, ROS 28.5)\n\n**VALUE CHECK**  \n- Combined value of our package ≈ 22.5 + 8.7 = 31.2 points.  \n- Drake Maye’s value ≈ 28.5 points.  \n- Difference ≈ +2.7 points in our favor – a small, acceptable premium for a starter‑level QB.  \n- Next‑week projection difference: 28.5 vs 14.2 (our WR) – a 14‑point swing, but the trade keeps us competitive for the rest of the season.\n\n**REPLACES**  \n- **Zay Flowers** will slot in as a starter over **Brian Thomas Jr.** or **Drake London** (the two WRs currently on Team ID two).  \n- **Jake Bates** will replace **Harrison Butker** (the lone kicker on Team ID two).  \n\n**CONTEXT**  \n- Our team is a **contender** that needs a high‑floor, consistent QB to push the standings in the final 8 games.  \n- Team ID two is a **rebuilding** roster; they can afford to trade a top‑tier QB for a solid starter at WR and a higher‑quality kicker.\n\n**WHY IT WORKS FOR BOTH SIDES**  \n- **Our side** gains a proven, low‑variance QB (Drake Maye) who will immediately start and fill the critical void at the position.  \n- **Their side** receives a high‑tier WR (Zay Flowers) who can start or provide depth, plus a better kicker (Jake Bates) that boosts their special‑teams value.  \n- Both teams keep a top‑tier player at their remaining position (we keep a strong RB/TE line, they keep a second QB).\n\n**RISK**  \n- **Drake Maye** may be on a bye or have injury risk; the trade is a moderate premium for a starter.  \n- We lose a high‑tier WR; if our season stalls, the value of the trade could regress.",
+      "cost": 0.029445,
+      "searches_performed": 1
+    },
+    "timestamp": "2026-09-16T00:03:55.005Z"
+  },
+  "timestamp": "2026-09-16T00:03:55.022Z"
+}

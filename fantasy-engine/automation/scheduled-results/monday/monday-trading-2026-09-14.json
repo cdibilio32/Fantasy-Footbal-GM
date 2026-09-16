@@ -1,25 +1,48 @@
 {
   "task": "trade_analysis",
   "week": 1,
-  "leagues": [],
+  "leagues": [
+    {
+      "name": "League 1",
+      "leagueId": "801088097"
+    }
+  ],
   "prompt": "Evaluate potential trade opportunities and provide recommendations",
   "result": {
-    "success": false,
-    "error": "LLM manager not initialized",
+    "success": true,
     "task": "trade_analysis",
     "week": 1,
-    "leagues": [],
+    "leagues": [
+      {
+        "leagueId": "801088097",
+        "teamId": "13",
+        "name": "Dibilio Family League"
+      }
+    ],
     "summary": {
-      "keyInsights": [
-        "Analysis failed: LLM manager not initialized"
-      ],
-      "confidence": 0,
+      "keyInsights": [],
+      "confidence": 95,
       "dataSourcesUsed": [
-        "Error"
-      ]
+        "ESPN API",
+        "Real LLM Analysis (No FantasyPros)"
+      ],
+      "fullLLMResponse": "TRADE Michael Pittman Jr. (WR) to Cole (Team ID six) for Tucker Kraft (TE)  \nCONTEXT: contender  \nWHY IT WORKS FOR BOTH SIDES:  \n- **Our side:** Upgrade the TE slot from Loveland (≈9.75 pts) to Tucker Kraft (≈16 pts) while only losing a bench‑WR (≈12 pts). The TE upgrade provides a high‑floor, high‑ceiling option for the flex/TE slot, giving us a stronger play‑off matchup and better week‑15‑17 coverage.  \n- **Their side:** Gain a solid, high‑volume WR (Pittman Jr.) to shore up depth and a potential flex option, while losing their lone TE. They can target a TE elsewhere (e.g., from the waiver wire or another trade) and will have a firm WR in the lineup.  \nRISK: The risk is that Cole may not fully replace the lost TE, potentially leaving them vulnerable if they cannot find a comparable option before the next trade window."
     },
-    "recommendations": [],
-    "timestamp": "2026-09-14T19:47:22.008Z"
+    "recommendations": [
+      {
+        "leagueId": "801088097",
+        "teamId": "13",
+        "name": "Dibilio Family League",
+        "changes": [],
+        "analysis": "TRADE Michael Pittman Jr. (WR) to Cole (Team ID six) for Tucker Kraft (TE)  \nCONTEXT: contender  \nWHY IT WORKS FOR BOTH SIDES:  \n- **Our side:** Upgrade the TE slot from Loveland (≈9.75 pts) to Tucker Kraft (≈16 pts) while only losing a bench‑WR (≈12 pts). The TE upgrade provides a high‑floor, high‑ceiling option for the flex/TE slot, giving us a stronger play‑off matchup and better week‑15‑17 coverage.  \n- **Their side:** Gain a solid, high‑volume WR (Pittman Jr.) to shore up depth and a potential flex option, while losing their lone TE. They can target a TE elsewhere (e.g., from the waiver wire or another trade) and will have a firm WR in the lineup.  \nRISK: The risk is that Cole may not fully replace the lost TE, potentially leaving them vulnerable if they cannot find a comparable option before the next trade window."
+      }
+    ],
+    "llmResponse": {
+      "content": "TRADE Michael Pittman Jr. (WR) to Cole (Team ID six) for Tucker Kraft (TE)  \nCONTEXT: contender  \nWHY IT WORKS FOR BOTH SIDES:  \n- **Our side:** Upgrade the TE slot from Loveland (≈9.75 pts) to Tucker Kraft (≈16 pts) while only losing a bench‑WR (≈12 pts). The TE upgrade provides a high‑floor, high‑ceiling option for the flex/TE slot, giving us a stronger play‑off matchup and better week‑15‑17 coverage.  \n- **Their side:** Gain a solid, high‑volume WR (Pittman Jr.) to shore up depth and a potential flex option, while losing their lone TE. They can target a TE elsewhere (e.g., from the waiver wire or another trade) and will have a firm WR in the lineup.  \nRISK: The risk is that Cole may not fully replace the lost TE, potentially leaving them vulnerable if they cannot find a comparable option before the next trade window.",
+      "cost": 0.026463,
+      "searches_performed": 1
+    },
+    "timestamp": "2026-09-14T23:31:41.026Z"
   },
-  "timestamp": "2026-09-14T19:47:22.008Z"
+  "timestamp": "2026-09-14T23:31:41.048Z"
 }
