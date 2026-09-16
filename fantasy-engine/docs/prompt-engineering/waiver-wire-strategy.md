@@ -1,5 +1,10 @@
 # Waiver Wire & FAAB Decision Frameworks
 
+> **Note:** these are historical research notes from an earlier (deleted) TypeScript/MCP
+> implementation — file paths like `mcp-server/src/...` no longer exist. The reasoning
+> below is what the current `fantasy-engine/agents/*_agent.py` system prompts are
+> distilled from; kept here as background, not as a map of the current codebase.
+
 This file distills established fantasy-football waiver-wire / free-agency decision
 frameworks used by respected analysts, for use in engineering the LLM system prompt
 for the `tuesday_waivers` (and `monday_analysis` waiver-prep) commands
