@@ -74,6 +74,8 @@ class Player:
     points: float = 0.0
     projected_points: float = 0.0
     season_projected_points: float = 0.0
+    season_points_previous_year: float = 0.0
+    weekly_points: dict[int, float] = field(default_factory=dict)
     injury_status: str | None = None
     percent_started: float = 0.0
     percent_owned: float = 0.0
@@ -87,6 +89,8 @@ class Player:
             "points": round(self.points, 1),
             "projectedPoints": round(self.projected_points, 1),
             "seasonProjectedPoints": round(self.season_projected_points, 1),
+            "seasonPointsPreviousYear": round(self.season_points_previous_year, 1),
+            "weeklyPoints": {week: round(pts, 1) for week, pts in sorted(self.weekly_points.items())},
             "injuryStatus": self.injury_status,
             "percentStarted": round(self.percent_started, 1),
             "percentOwned": round(self.percent_owned, 1),
@@ -138,6 +142,7 @@ class ESPNService:
         if espn_s2 and espn_swid:
             self._session.headers["Cookie"] = f"espn_s2={espn_s2}; SWID={espn_swid}"
         self._week_cache: dict[str, int] = {}
+        self._weekly_points_cache: dict[str, dict[str, dict[int, float]]] = {}
 
     # -- current week -------------------------------------------------------
 
@@ -207,12 +212,13 @@ class ESPNService:
     def _pro_team(self, team_id: int) -> str:
         return PRO_TEAM_ABBREVIATIONS.get(team_id, "FA")
 
-    def _build_player(self, entry_or_player: dict, current_week: int) -> Player:
+    def _build_player(self, entry_or_player: dict, current_week: int, weekly_points_by_id: dict[str, dict[int, float]] | None = None) -> Player:
         player_data = entry_or_player.get("playerPoolEntry", {}).get("player") or entry_or_player.get("player") or entry_or_player
         stats = player_data.get("stats", [])
 
         weekly_projection = 0.0
         season_total = 0.0
+        season_total_previous_year = 0.0
         actual_points = 0.0
 
         weekly_stat = next(
@@ -245,6 +251,19 @@ class ESPNService:
         if season_stat:
             season_total = season_stat.get("appliedTotal") or 0.0
 
+        # Previous season's actual total — ESPN bundles this into the same
+        # `stats` array as the current season's data, no extra request needed.
+        previous_year_stat = next(
+            (
+                s
+                for s in stats
+                if s.get("statSourceId") == 0 and not s.get("scoringPeriodId") and s.get("seasonId") == self.season_year - 1
+            ),
+            None,
+        )
+        if previous_year_stat:
+            season_total_previous_year = previous_year_stat.get("appliedTotal") or 0.0
+
         position = self._position_name(player_data.get("defaultPositionId", 0))
         weekly_max = {"QB": 50, "RB": 40, "WR": 40, "TE": 30, "D/ST": 35, "K": 25}.get(position, 35)
         looks_seasonal = season_total > 0 and weekly_projection > 0 and (weekly_projection / season_total * 100) > 30
@@ -254,18 +273,56 @@ class ESPNService:
             weekly_projection = weekly_projection / 17
         weekly_projection = min(weekly_projection, 200)
 
+        player_id = str(player_data.get("id", ""))
         return Player(
-            id=str(player_data.get("id", "")),
+            id=player_id,
             full_name=player_data.get("fullName", "Unknown Player"),
             position=position,
             pro_team=self._pro_team(player_data.get("proTeamId", 0)),
             points=actual_points,
             projected_points=weekly_projection if weekly_projection > 0 else (season_total / 17 if season_total else 0.0),
             season_projected_points=season_total,
+            season_points_previous_year=season_total_previous_year,
+            weekly_points=(weekly_points_by_id or {}).get(player_id, {}),
             injury_status=player_data.get("injuryStatus"),
             percent_started=(player_data.get("ownership") or {}).get("percentStarted", 0.0),
             percent_owned=(player_data.get("ownership") or {}).get("percentOwned", 0.0),
         )
+
+    def _get_weekly_points_by_player(self, league_id: str) -> dict[str, dict[int, float]]:
+        """
+        Actual fantasy points per rostered player, per completed week of the
+        current season — e.g. {"4374302": {1: 8.5, 2: 39.2}}. Each roster
+        request only returns a 2-week trailing window around the requested
+        `scoringPeriodId`, so this strides by 2 (week 2 covers weeks 1-2,
+        week 4 covers weeks 3-4, ...) to cover every played week in the
+        fewest requests, and caches the result per league for this
+        process's lifetime.
+        """
+        cached = self._weekly_points_cache.get(str(league_id))
+        if cached is not None:
+            return cached
+
+        current_week = self.get_current_week(league_id)
+        weeks_to_request: list[int] = list(range(2, current_week + 1, 2))
+        if not weeks_to_request or weeks_to_request[-1] != current_week:
+            weeks_to_request.append(current_week)
+
+        result: dict[str, dict[int, float]] = {}
+        for week in weeks_to_request:
+            data = self._get(str(league_id), params={"view": "mRoster", "scoringPeriodId": week})
+            for team in data.get("teams", []):
+                for entry in (team.get("roster") or {}).get("entries", []):
+                    player_data = entry.get("playerPoolEntry", {}).get("player", {})
+                    player_id = str(player_data.get("id", ""))
+                    if not player_id:
+                        continue
+                    for stat in player_data.get("stats", []):
+                        if stat.get("statSourceId") == 0 and stat.get("scoringPeriodId"):
+                            result.setdefault(player_id, {})[stat["scoringPeriodId"]] = stat.get("appliedTotal") or 0.0
+
+        self._weekly_points_cache[str(league_id)] = result
+        return result
 
     # -- ENDPOINT: league info -------------------------------------------------
 
@@ -292,12 +349,14 @@ class ESPNService:
             available = ", ".join(str(t.get("id")) for t in data.get("teams", []))
             raise ESPNServiceError(f"Team {team_id} not found in league {league_id}. Available teams: {available}")
 
+        weekly_points_by_id = self._get_weekly_points_by_player(league_id)
+
         starters: list[Player] = []
         bench: list[Player] = []
         ir: list[Player] = []
 
         for entry in (team.get("roster") or {}).get("entries", []):
-            player = self._build_player(entry, current_week)
+            player = self._build_player(entry, current_week, weekly_points_by_id)
             slot_id = entry.get("lineupSlotId")
 
             if _is_ir_slot(slot_id):
@@ -332,10 +391,19 @@ class ESPNService:
                 season_stat = next(
                     (s for s in stats if s.get("statSourceId") == 1 and not s.get("scoringPeriodId")), None
                 )
+                previous_year_stat = next(
+                    (
+                        s
+                        for s in stats
+                        if s.get("statSourceId") == 0 and not s.get("scoringPeriodId") and s.get("seasonId") == self.season_year - 1
+                    ),
+                    None,
+                )
                 row = {
                     "fullName": player_data.get("fullName", "Unknown Player"),
                     "position": self._position_name(player_data.get("defaultPositionId", 0)),
                     "seasonPoints": round(season_stat.get("appliedTotal", 0.0) if season_stat else 0.0, 1),
+                    "seasonPointsPreviousYear": round(previous_year_stat.get("appliedTotal", 0.0) if previous_year_stat else 0.0, 1),
                     "percentOwned": round((player_data.get("ownership") or {}).get("percentOwned", 0.0)),
                 }
                 slot_id = entry.get("lineupSlotId")

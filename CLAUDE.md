@@ -125,6 +125,16 @@ Auth is two cookies from a browser logged into fantasy.espn.com
 | `get_transactions(league_id)` | Recent adds/drops/trades | (available, currently unused by any agent) |
 | `get_current_week(league_id)` | ESPN's own current scoring period (asks ESPN directly; not calendar-guessed) | all |
 
+Every player returned by `get_team_roster` / `get_available_players` / `get_my_roster_with_top_waivers`
+also carries `seasonPointsPreviousYear` (last season's actual total — free, bundled
+into the same ESPN response) and `weeklyPoints` (a `{week: points}` map of this
+season's actual points so far, rostered players only — costs a handful of extra
+requests, cached per league for the process's lifetime, via
+`_get_weekly_points_by_player()`). `get_league_rosters` (the lean per-team summary
+used for trade-partner browsing) carries `seasonPointsPreviousYear` per player too,
+but intentionally not the weekly breakdown — that stays scoped to the roster/waiver
+endpoints to avoid bloating a call that already lists every team in the league.
+
 ## Learned Preferences (`memories.md`)
 
 `fantasy-engine/agents/memories.md` holds standing preferences and

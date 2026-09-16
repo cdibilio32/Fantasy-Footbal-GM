@@ -93,9 +93,19 @@ def format_player_line(p: dict[str, Any]) -> str:
     season = p.get("seasonProjectedPoints", 0)
     season_note = f" | season total {season} pts" if season and abs(season - proj) > 10 else ""
     injury = f" | INJURY: {p['injuryStatus']}" if p.get("injuryStatus") else ""
+
+    prev_year = p.get("seasonPointsPreviousYear", 0)
+    prev_year_note = f" | last year: {prev_year} season pts" if prev_year else ""
+
+    weekly = p.get("weeklyPoints") or {}
+    weekly_note = ""
+    if weekly:
+        recent_weeks = sorted(weekly.items())[-4:]  # last few played weeks, not the whole season, to keep prompts tight
+        weekly_note = " | this season by week: " + ", ".join(f"wk{wk} {pts}" for wk, pts in recent_weeks)
+
     return (
         f"- {p['fullName']} ({p['position']}, {p.get('team', 'FA')}) — "
-        f"{proj} proj pts this week{season_note} | {p.get('percentOwned', 0)}% owned | "
+        f"{proj} proj pts this week{season_note}{prev_year_note}{weekly_note} | {p.get('percentOwned', 0)}% owned | "
         f"{p.get('percentStarted', 0)}% started{injury}"
     )
 
@@ -134,7 +144,10 @@ def format_other_teams(other_teams: list[dict[str, Any]]) -> str:
             by_position.setdefault(p["position"], []).append(p)
         for position, players in sorted(by_position.items()):
             top = sorted(players, key=lambda p: p["seasonPoints"], reverse=True)[:3]
-            names = ", ".join(f"{p['fullName']} ({p['seasonPoints']} season pts, {p['percentOwned']}% owned)" for p in top)
+            names = ", ".join(
+                f"{p['fullName']} ({p['seasonPoints']} season pts, last year {p.get('seasonPointsPreviousYear', 0)}, {p['percentOwned']}% owned)"
+                for p in top
+            )
             lines.append(f"  {position} ({len(players)} rostered): {names}")
     return "\n".join(lines)
 
