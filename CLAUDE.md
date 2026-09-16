@@ -26,6 +26,7 @@ fantasy-engine/
 │   ├── trade_agent.py     # deep agent: trade proposals
 │   ├── waiver_agent.py    # deep agent: waiver-wire proposals
 │   ├── lineup_agent.py    # deep agent: lineup optimization
+│   ├── memories.md        # standing preferences learned from feedback (see below)
 │   ├── requirements.txt
 │   └── .env.example
 └── docs/prompt-engineering/   # research notes the agents' prompts are distilled from
@@ -123,6 +124,18 @@ Auth is two cookies from a browser logged into fantasy.espn.com
 | `get_matchups(league_id, week)` | That week's matchup schedule | lineup |
 | `get_transactions(league_id)` | Recent adds/drops/trades | (available, currently unused by any agent) |
 | `get_current_week(league_id)` | ESPN's own current scoring period (asks ESPN directly; not calendar-guessed) | all |
+
+## Learned Preferences (`memories.md`)
+
+`fantasy-engine/agents/memories.md` holds standing preferences and
+corrections learned from user feedback on past recommendations (e.g. "this
+league doesn't allow trading draft picks"). `common.py::load_memories()`
+reads it and `build_system_prompt()` appends it to every agent's system
+prompt, so an entry here changes behavior on every future run of any of the
+three agents, not just in chat. It's maintained by the `remember-feedback`
+Claude Code skill (`.claude/skills/remember-feedback/`) — trigger it with
+feedback like "remember this" or a correction on an agent's output. Don't
+hand-edit the file outside that skill unless fixing a bad entry.
 
 ## Development Guidelines
 

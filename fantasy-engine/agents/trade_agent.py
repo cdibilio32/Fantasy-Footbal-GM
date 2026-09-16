@@ -18,7 +18,7 @@ import argparse
 from deepagents import create_deep_agent
 from langchain_core.tools import tool
 
-from common import format_available_players, format_other_teams, format_roster, get_model, print_header, resolve_leagues
+from common import build_system_prompt, format_available_players, format_other_teams, format_roster, get_model, print_header, resolve_leagues
 from espn_service import ESPNServiceError, espn
 
 SYSTEM_PROMPT = """You are a fantasy football trade analyst evaluating trade opportunities for one \
@@ -107,7 +107,7 @@ def build_tools(league_id: str, team_id: str):
 
 def run(league_id: str, team_id: str, league_name: str, week: int) -> str:
     tools = build_tools(league_id, team_id)
-    agent = create_deep_agent(model=get_model(), tools=tools, system_prompt=SYSTEM_PROMPT, name="trade_agent")
+    agent = create_deep_agent(model=get_model(), tools=tools, system_prompt=build_system_prompt(SYSTEM_PROMPT), name="trade_agent")
     task = (
         f"Evaluate trade opportunities for my team (ESPN Team ID {team_id}) in \"{league_name}\", "
         f"week {week}. Start by calling get_my_roster and get_other_teams."

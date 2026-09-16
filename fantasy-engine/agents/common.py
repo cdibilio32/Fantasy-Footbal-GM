@@ -15,6 +15,8 @@ from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
+MEMORIES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memories.md")
+
 
 def get_model() -> ChatOpenAI:
     """
@@ -64,6 +66,26 @@ def resolve_leagues(league_arg: str | None, team_arg: str | None) -> list[dict[s
 
 def get_current_week_words(week: int) -> str:
     return str(week)
+
+
+def load_memories() -> str:
+    """
+    Standing preferences/corrections accumulated from past user feedback
+    (written by the `remember-feedback` Claude Code skill) so every agent
+    run applies what you've already told it, not just the current roster
+    snapshot.
+    """
+    if not os.path.exists(MEMORIES_PATH):
+        return ""
+    content = open(MEMORIES_PATH, encoding="utf-8").read().strip()
+    if not content:
+        return ""
+    return f"\n\nLEARNED PREFERENCES (from your past feedback — apply these when making recommendations):\n{content}\n"
+
+
+def build_system_prompt(base_prompt: str) -> str:
+    """Every agent's system prompt, with memories.md appended."""
+    return base_prompt + load_memories()
 
 
 def format_player_line(p: dict[str, Any]) -> str:

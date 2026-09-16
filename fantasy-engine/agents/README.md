@@ -33,8 +33,13 @@ for the trigger criteria — when each agent is meant to be run.
   matchups, transactions) that returns just the shape of data one agent
   needs. See the module docstring and `AGENT_ENDPOINTS` at the bottom for
   which endpoints each agent uses.
-- **`common.py`** — the shared OpenRouter model config and the plain-text
-  formatters that turn ESPN data into prompt-ready sections.
+- **`common.py`** — the shared OpenRouter model config, the plain-text
+  formatters that turn ESPN data into prompt-ready sections, and
+  `load_memories()` / `build_system_prompt()` (see below).
+- **`memories.md`** — standing preferences/corrections learned from past
+  feedback, appended to every agent's system prompt on every run. Maintained
+  by the `remember-feedback` Claude Code skill (`.claude/skills/remember-feedback/`)
+  — don't hand-edit it outside that skill.
 - **`trade_agent.py` / `waiver_agent.py` / `lineup_agent.py`** — each
   defines its own system prompt (the decision framework) and a small set
   of tools (thin wrappers around the relevant `espn_service` endpoints,
