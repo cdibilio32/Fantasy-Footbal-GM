@@ -28,7 +28,7 @@ export class LLMConfigManager {
     } else if (primaryProvider === 'openrouter' && openrouterKey) {
       return {
         provider: 'openrouter',
-        model: process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b',
+        model: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-v4.1-flash',
         api_key: openrouterKey,
         max_tokens: 1000,
         temperature: 0.7
@@ -79,7 +79,7 @@ export class LLMConfigManager {
     } else if (openrouterKey) {
       return {
         provider: 'openrouter',
-        model: process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b',
+        model: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-v4.1-flash',
         api_key: openrouterKey,
         max_tokens: 1000,
         temperature: 0.7
@@ -264,7 +264,7 @@ export class LLMConfigManager {
           break;
         case 'openrouter':
           config.api_key = process.env.OPENROUTER_API_KEY || '';
-          config.model = process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b';
+          config.model = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-v4.1-flash';
           break;
       }
       

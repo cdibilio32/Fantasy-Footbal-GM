@@ -32,6 +32,7 @@ export class OpenRouterProvider extends OpenAIProvider {
 
   get models(): string[] {
     return [
+      'deepseek/deepseek-v4.1-flash',
       'openai/gpt-oss-20b',
       'openai/gpt-oss-120b',
       'anthropic/claude-3.5-sonnet',
@@ -43,11 +44,12 @@ export class OpenRouterProvider extends OpenAIProvider {
   getPricing(): { input_cost_per_token: number; output_cost_per_token: number; currency: string } {
     // Pricing per OpenRouter (USD per million tokens, converted to per token)
     const pricingMap: Record<string, any> = {
+      'deepseek/deepseek-v4.1-flash': { input: 0.15, output: 0.60 },
       'openai/gpt-oss-20b': { input: 0.05, output: 0.20 },
       'openai/gpt-oss-120b': { input: 0.15, output: 0.60 }
     };
 
-    const pricing = pricingMap[this.config.model] || pricingMap['openai/gpt-oss-20b'];
+    const pricing = pricingMap[this.config.model] || pricingMap['deepseek/deepseek-v4.1-flash'];
 
     return {
       input_cost_per_token: pricing.input / 1000000,
