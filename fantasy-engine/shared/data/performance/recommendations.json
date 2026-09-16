@@ -127,5 +127,26 @@
     "llmUsed": true,
     "llmModel": "gemini-2.0-flash-exp",
     "cost": 0
+  },
+  {
+    "id": "rec_1789522845348_xtomz8l9m",
+    "timestamp": "2026-09-16T01:40:45.348Z",
+    "type": "waiver_analysis",
+    "week": 1,
+    "leagueId": "801088097",
+    "teamId": "13",
+    "recommendation": {
+      "id": "basic_rec_1789522845347",
+      "type": "waiver_analysis",
+      "confidence": 76.49074395968995,
+      "recommendation": "Rule-based waiver_analysis recommendation",
+      "details": {}
+    },
+    "confidence": 76.49074395968995,
+    "dataSourcesUsed": [
+      "basic"
+    ],
+    "llmUsed": false,
+    "cost": 0
   }
 ]
