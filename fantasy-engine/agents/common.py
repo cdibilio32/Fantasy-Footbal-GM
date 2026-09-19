@@ -29,7 +29,7 @@ def get_model() -> ChatOpenAI:
     if not api_key:
         raise RuntimeError("OPENROUTER_API_KEY is not set — copy .env.example to .env and fill it in.")
     return ChatOpenAI(
-        model=os.environ.get("OPENROUTER_MODEL", "openai/gpt-oss-20b"),
+        model=os.environ.get("OPENROUTER_MODEL", "deepseek/deepseek-v4-flash"),
         openai_api_base="https://openrouter.ai/api/v1",
         openai_api_key=api_key,
         temperature=0.7,
