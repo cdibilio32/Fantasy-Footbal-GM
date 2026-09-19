@@ -126,14 +126,20 @@ Auth is two cookies from a browser logged into fantasy.espn.com
 | `get_current_week(league_id)` | ESPN's own current scoring period (asks ESPN directly; not calendar-guessed) | all |
 
 Every player returned by `get_team_roster` / `get_available_players` / `get_my_roster_with_top_waivers`
-also carries `seasonPointsPreviousYear` (last season's actual total — free, bundled
-into the same ESPN response) and `weeklyPoints` (a `{week: points}` map of this
+also carries `seasonPointsToDate` (this season's actual cumulative total — free,
+bundled into the same ESPN response), `seasonPointsPreviousYear` (last season's
+actual total — also free), and `weeklyPoints` (a `{week: points}` map of this
 season's actual points so far, rostered players only — costs a handful of extra
 requests, cached per league for the process's lifetime, via
 `_get_weekly_points_by_player()`). `get_league_rosters` (the lean per-team summary
-used for trade-partner browsing) carries `seasonPointsPreviousYear` per player too,
-but intentionally not the weekly breakdown — that stays scoped to the roster/waiver
-endpoints to avoid bloating a call that already lists every team in the league.
+used for trade-partner browsing) carries `seasonPointsToDate` and
+`seasonPointsPreviousYear` per player too, but intentionally not the weekly
+breakdown — that stays scoped to the roster/waiver endpoints to avoid bloating a
+call that already lists every team in the league.
+
+Note `seasonProjectedPoints` (ESPN's own season-total *projection*, anchored near
+preseason) is a different number from `seasonPointsToDate` (what's actually been
+scored so far) — don't conflate them when reasoning about a player's trajectory.
 
 ## Learned Preferences (`memories.md`)
 

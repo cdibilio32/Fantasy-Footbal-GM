@@ -74,6 +74,7 @@ class Player:
     points: float = 0.0
     projected_points: float = 0.0
     season_projected_points: float = 0.0
+    season_points_to_date: float = 0.0
     season_points_previous_year: float = 0.0
     weekly_points: dict[int, float] = field(default_factory=dict)
     injury_status: str | None = None
@@ -89,6 +90,7 @@ class Player:
             "points": round(self.points, 1),
             "projectedPoints": round(self.projected_points, 1),
             "seasonProjectedPoints": round(self.season_projected_points, 1),
+            "seasonPointsToDate": round(self.season_points_to_date, 1),
             "seasonPointsPreviousYear": round(self.season_points_previous_year, 1),
             "weeklyPoints": {week: round(pts, 1) for week, pts in sorted(self.weekly_points.items())},
             "injuryStatus": self.injury_status,
@@ -219,6 +221,7 @@ class ESPNService:
         weekly_projection = 0.0
         season_total = 0.0
         season_total_previous_year = 0.0
+        season_total_to_date = 0.0
         actual_points = 0.0
 
         weekly_stat = next(
@@ -264,6 +267,20 @@ class ESPNService:
         if previous_year_stat:
             season_total_previous_year = previous_year_stat.get("appliedTotal") or 0.0
 
+        # This season's actual cumulative total so far (distinct from
+        # season_projected_points, which is a projection, not what's
+        # actually been scored yet).
+        to_date_stat = next(
+            (
+                s
+                for s in stats
+                if s.get("statSourceId") == 0 and not s.get("scoringPeriodId") and s.get("seasonId") == self.season_year
+            ),
+            None,
+        )
+        if to_date_stat:
+            season_total_to_date = to_date_stat.get("appliedTotal") or 0.0
+
         position = self._position_name(player_data.get("defaultPositionId", 0))
         weekly_max = {"QB": 50, "RB": 40, "WR": 40, "TE": 30, "D/ST": 35, "K": 25}.get(position, 35)
         looks_seasonal = season_total > 0 and weekly_projection > 0 and (weekly_projection / season_total * 100) > 30
@@ -282,6 +299,7 @@ class ESPNService:
             points=actual_points,
             projected_points=weekly_projection if weekly_projection > 0 else (season_total / 17 if season_total else 0.0),
             season_projected_points=season_total,
+            season_points_to_date=season_total_to_date,
             season_points_previous_year=season_total_previous_year,
             weekly_points=(weekly_points_by_id or {}).get(player_id, {}),
             injury_status=player_data.get("injuryStatus"),
@@ -399,10 +417,19 @@ class ESPNService:
                     ),
                     None,
                 )
+                to_date_stat = next(
+                    (
+                        s
+                        for s in stats
+                        if s.get("statSourceId") == 0 and not s.get("scoringPeriodId") and s.get("seasonId") == self.season_year
+                    ),
+                    None,
+                )
                 row = {
                     "fullName": player_data.get("fullName", "Unknown Player"),
                     "position": self._position_name(player_data.get("defaultPositionId", 0)),
                     "seasonPoints": round(season_stat.get("appliedTotal", 0.0) if season_stat else 0.0, 1),
+                    "seasonPointsToDate": round(to_date_stat.get("appliedTotal", 0.0) if to_date_stat else 0.0, 1),
                     "seasonPointsPreviousYear": round(previous_year_stat.get("appliedTotal", 0.0) if previous_year_stat else 0.0, 1),
                     "percentOwned": round((player_data.get("ownership") or {}).get("percentOwned", 0.0)),
                 }

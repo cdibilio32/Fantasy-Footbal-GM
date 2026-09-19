@@ -29,11 +29,17 @@ def get_model() -> ChatOpenAI:
     if not api_key:
         raise RuntimeError("OPENROUTER_API_KEY is not set — copy .env.example to .env and fill it in.")
     return ChatOpenAI(
-        model=os.environ.get("OPENROUTER_MODEL", "deepseek/deepseek-v4-flash"),
+        model=os.environ.get("OPENROUTER_MODEL", "deepseek/deepseek-v4.1-flash"),
         openai_api_base="https://openrouter.ai/api/v1",
         openai_api_key=api_key,
         temperature=0.7,
-        extra_body={"plugins": [{"id": "web"}]},
+        # Hidden-reasoning models can burn an entire token budget on invisible
+        # reasoning and return zero visible content (finish_reason "length",
+        # completion made entirely of reasoning tokens) on the trade agent's
+        # longer, multi-step prompts — verified live. Capping reasoning well
+        # under the overall budget guarantees room left for the actual answer.
+        max_tokens=16000,
+        extra_body={"plugins": [{"id": "web"}], "reasoning": {"max_tokens": 6000}},
     )
 
 
@@ -83,16 +89,28 @@ def load_memories() -> str:
     return f"\n\nLEARNED PREFERENCES (from your past feedback — apply these when making recommendations):\n{content}\n"
 
 
+TOOL_GUARDRAIL = (
+    "\n\nYou have access to filesystem tools (ls, read_file, write_file, grep, etc.) and a task/"
+    "subagent tool as part of the deep-agent framework you're running in — this task doesn't need "
+    "them. There are no useful files to read and no reason to write or search any. Go straight to "
+    "your named data tools (get_my_roster, etc.) and, once you've called them, answer directly — "
+    "don't explore the filesystem first."
+)
+
+
 def build_system_prompt(base_prompt: str) -> str:
-    """Every agent's system prompt, with memories.md appended."""
-    return base_prompt + load_memories()
+    """Every agent's system prompt, with the filesystem-tool guardrail and memories.md appended."""
+    return base_prompt + TOOL_GUARDRAIL + load_memories()
 
 
 def format_player_line(p: dict[str, Any]) -> str:
     proj = p.get("projectedPoints", 0)
     season = p.get("seasonProjectedPoints", 0)
-    season_note = f" | season total {season} pts" if season and abs(season - proj) > 10 else ""
+    season_note = f" | season total proj {season} pts" if season and abs(season - proj) > 10 else ""
     injury = f" | INJURY: {p['injuryStatus']}" if p.get("injuryStatus") else ""
+
+    to_date = p.get("seasonPointsToDate", 0)
+    to_date_note = f" | {to_date} pts to date this season" if to_date else ""
 
     prev_year = p.get("seasonPointsPreviousYear", 0)
     prev_year_note = f" | last year: {prev_year} season pts" if prev_year else ""
@@ -105,8 +123,8 @@ def format_player_line(p: dict[str, Any]) -> str:
 
     return (
         f"- {p['fullName']} ({p['position']}, {p.get('team', 'FA')}) — "
-        f"{proj} proj pts this week{season_note}{prev_year_note}{weekly_note} | {p.get('percentOwned', 0)}% owned | "
-        f"{p.get('percentStarted', 0)}% started{injury}"
+        f"{proj} proj pts this week{to_date_note}{season_note}{prev_year_note}{weekly_note} | "
+        f"{p.get('percentOwned', 0)}% owned | {p.get('percentStarted', 0)}% started{injury}"
     )
 
 
@@ -143,9 +161,10 @@ def format_other_teams(other_teams: list[dict[str, Any]]) -> str:
         for p in team["starters"] + team["bench"]:
             by_position.setdefault(p["position"], []).append(p)
         for position, players in sorted(by_position.items()):
-            top = sorted(players, key=lambda p: p["seasonPoints"], reverse=True)[:3]
+            top = sorted(players, key=lambda p: p.get("seasonPointsToDate", 0), reverse=True)[:3]
             names = ", ".join(
-                f"{p['fullName']} ({p['seasonPoints']} season pts, last year {p.get('seasonPointsPreviousYear', 0)}, {p['percentOwned']}% owned)"
+                f"{p['fullName']} ({p.get('seasonPointsToDate', 0)} pts to date, season proj {p['seasonPoints']}, "
+                f"last year {p.get('seasonPointsPreviousYear', 0)}, {p['percentOwned']}% owned)"
                 for p in top
             )
             lines.append(f"  {position} ({len(players)} rostered): {names}")
