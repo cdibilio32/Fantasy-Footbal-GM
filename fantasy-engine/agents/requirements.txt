@@ -1,0 +1,4 @@
+deepagents>=0.7
+langchain-openai>=1.6
+requests>=2.31
+python-dotenv>=1.0

@@ -1,5 +1,10 @@
 # Lineup Optimization Strategy Research
 
+> **Note:** these are historical research notes from an earlier (deleted) TypeScript/MCP
+> implementation — file paths like `mcp-server/src/...` no longer exist. The reasoning
+> below is what the current `fantasy-engine/agents/*_agent.py` system prompts are
+> distilled from; kept here as background, not as a map of the current codebase.
+
 This file distills established start/sit and lineup-construction frameworks used by
 serious fantasy analysts, for use in the system prompts that back the
 `thursday_optimization` and `sunday_check` MCP workflow tasks
