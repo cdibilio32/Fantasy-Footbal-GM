@@ -98,9 +98,13 @@ TOOL_GUARDRAIL = (
 )
 
 
-def build_system_prompt(base_prompt: str) -> str:
-    """Every agent's system prompt, with the filesystem-tool guardrail and memories.md appended."""
-    return base_prompt + TOOL_GUARDRAIL + load_memories()
+def build_system_prompt(base_prompt: str, tool_guardrail: bool = True) -> str:
+    """
+    Every agent's system prompt, with memories.md appended. The filesystem-tool
+    guardrail is only for deep agents — a plain model call (e.g. the trade
+    agent's per-team partner sub-agents) has no such tools to warn about.
+    """
+    return base_prompt + (TOOL_GUARDRAIL if tool_guardrail else "") + load_memories()
 
 
 def format_player_line(p: dict[str, Any]) -> str:
@@ -145,35 +149,6 @@ def format_available_players(available: dict[str, list[dict[str, Any]]]) -> str:
     for position, players in available.items():
         lines.append(f"\n{position}:")
         lines += [format_player_line(p) for p in players] or ["  (none available)"]
-    return "\n".join(lines)
-
-
-def _injury_note(p: dict[str, Any]) -> str:
-    status = p.get("injuryStatus")
-    return f", INJURY: {status}" if status and status.upper() != "ACTIVE" else ""
-
-
-def format_other_teams(other_teams: list[dict[str, Any]]) -> str:
-    lines = [
-        "OTHER TEAMS IN THE LEAGUE (real trade partners — when you propose a trade, name one of "
-        "these teams, including its ESPN Team ID, and one of its ACTUAL rostered players below, "
-        "copied verbatim. Never a hypothetical player, and never a player from the waiver/free-agent "
-        "list — those are unrostered and cannot be traded for.)"
-    ]
-    for team in other_teams:
-        owners = f", owned by {' & '.join(team['ownerNames'])}" if team.get("ownerNames") else ""
-        lines.append(f"\nTeam \"{team['teamName']}\" (ESPN Team ID {team['teamId']}{owners}):")
-        by_position: dict[str, list[dict[str, Any]]] = {}
-        for p in team["starters"] + team["bench"]:
-            by_position.setdefault(p["position"], []).append(p)
-        for position, players in sorted(by_position.items()):
-            top = sorted(players, key=lambda p: p.get("seasonPointsToDate", 0), reverse=True)[:3]
-            names = ", ".join(
-                f"{p['fullName']} ({p.get('seasonPointsToDate', 0)} pts to date, season proj {p['seasonPoints']}, "
-                f"last year {p.get('seasonPointsPreviousYear', 0)}, {p['percentOwned']}% owned{_injury_note(p)})"
-                for p in top
-            )
-            lines.append(f"  {position} ({len(players)} rostered): {names}")
     return "\n".join(lines)
 
 

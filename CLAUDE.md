@@ -81,18 +81,25 @@ Run when:
   rebuilder read.
 - The user directly asks for trade ideas, or to evaluate a specific trade.
 
-#### Trade plays (`--play`)
+#### How it works: main agent + one partner sub-agent per team
 
-Targeted moves the user already has in mind, instead of the open league-wide scan:
+1. **Main agent** (`MAIN_PROMPT`, a deep agent) gets your roster and the top
+   free agents per position in its first message, and writes a **trade
+   brief**: contender/rebuilder context, weaknesses, trade capital, players to
+   keep, and replacement level per position.
+2. It calls its one tool, `evaluate_trade_partners(brief)`, which runs one
+   **partner sub-agent** (`PARTNER_PROMPT`) per other team in parallel
+   (`TRADE_SUBAGENT_CONCURRENCY`, default 4). Each is a single model call with
+   web search and no tools: it sees the brief, your roster and that team's
+   full roster, and says whether there's a trade, what it is, and why.
+3. The main agent ranks every opportunity and returns the ranked list, plus a
+   one-line reason for each team with no opportunity.
 
-| Play | Use when | Example |
-|---|---|---|
-| `injury-hole` | You have a surplus starter at a position and league-mates just lost *their* starter there to injury — sell at peak demand for a position you need | `python trade_agent.py --play injury-hole --sell "Matthew Stafford" --for RB --targets "Michelle,Jason,Adrianna"` |
-
-`--targets` matches owner first/full names or team names (must hit exactly one
-team each). Leave it off and the play targets every team whose starter at the
-sold player's position has a non-ACTIVE injury tag. Add new plays to `PLAYS`
-in `trade_agent.py`.
+Optional flags:
+- `--ask "Sell Matthew Stafford for an RB"` — a specific request, folded into
+  the brief as its top priority.
+- `--targets "Michelle,Jason,Adrianna"` — only these teams get a sub-agent;
+  matches owner first/full names or team names (exactly one team each).
 
 Don't run it once the league's trade deadline has passed for the season.
 
@@ -131,7 +138,7 @@ Auth is two cookies from a browser logged into fantasy.espn.com
 |---|---|---|
 | `get_league_info(league_id)` | League name, current scoring week, team list | all |
 | `get_team_roster(league_id, team_id)` | One team's starters/bench/IR, weekly-reconciled projections | trade, lineup |
-| `get_league_rosters(league_id)` | Every team's roster (season points, ownership) — real trade partners | trade |
+| `get_league_rosters(league_id)` | Every team's roster (season points, ownership, injury tags) plus owner names — the trade partner list | trade |
 | `get_available_players(league_id)` | Free agents / waiver-wire players, <50% owned | trade, waiver (via `get_my_roster_with_top_waivers`) |
 | `get_my_roster_with_top_waivers(league_id, team_id)` | Own roster + top free agents per position | waiver |
 | `get_matchups(league_id, week)` | That week's matchup schedule | lineup |

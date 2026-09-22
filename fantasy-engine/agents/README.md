@@ -22,8 +22,8 @@ python trade_agent.py                       # all leagues from .env
 python waiver_agent.py --league 12345 --team 3
 python lineup_agent.py --week 6
 
-# targeted trade play: sell a surplus QB to teams with an injured QB, for an RB
-python trade_agent.py --play injury-hole --sell "Matthew Stafford" --for RB --targets "Michelle,Jason,Adrianna"
+# trade scan with a specific request, limited to three teams
+python trade_agent.py --ask "Sell Matthew Stafford for an RB" --targets "Michelle,Jason,Adrianna"
 ```
 
 Each agent prints its recommendation to stdout. See the root `CLAUDE.md`
@@ -43,6 +43,10 @@ for the trigger criteria — when each agent is meant to be run.
   feedback, appended to every agent's system prompt on every run. Maintained
   by the `remember-feedback` Claude Code skill (`.claude/skills/remember-feedback/`)
   — don't hand-edit it outside that skill.
+- **`trade_agent.py`** is a main agent plus one partner sub-agent per
+  team: the main agent writes a trade brief from your roster, sub-agents
+  evaluate each team against it in parallel, and the main agent ranks what
+  they find. See the root `CLAUDE.md` for details.
 - **`trade_agent.py` / `waiver_agent.py` / `lineup_agent.py`** — each
   defines its own system prompt (the decision framework) and a small set
   of tools (thin wrappers around the relevant `espn_service` endpoints,
