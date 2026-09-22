@@ -148,6 +148,11 @@ def format_available_players(available: dict[str, list[dict[str, Any]]]) -> str:
     return "\n".join(lines)
 
 
+def _injury_note(p: dict[str, Any]) -> str:
+    status = p.get("injuryStatus")
+    return f", INJURY: {status}" if status and status.upper() != "ACTIVE" else ""
+
+
 def format_other_teams(other_teams: list[dict[str, Any]]) -> str:
     lines = [
         "OTHER TEAMS IN THE LEAGUE (real trade partners — when you propose a trade, name one of "
@@ -156,7 +161,8 @@ def format_other_teams(other_teams: list[dict[str, Any]]) -> str:
         "list — those are unrostered and cannot be traded for.)"
     ]
     for team in other_teams:
-        lines.append(f"\nTeam \"{team['teamName']}\" (ESPN Team ID {team['teamId']}):")
+        owners = f", owned by {' & '.join(team['ownerNames'])}" if team.get("ownerNames") else ""
+        lines.append(f"\nTeam \"{team['teamName']}\" (ESPN Team ID {team['teamId']}{owners}):")
         by_position: dict[str, list[dict[str, Any]]] = {}
         for p in team["starters"] + team["bench"]:
             by_position.setdefault(p["position"], []).append(p)
@@ -164,7 +170,7 @@ def format_other_teams(other_teams: list[dict[str, Any]]) -> str:
             top = sorted(players, key=lambda p: p.get("seasonPointsToDate", 0), reverse=True)[:3]
             names = ", ".join(
                 f"{p['fullName']} ({p.get('seasonPointsToDate', 0)} pts to date, season proj {p['seasonPoints']}, "
-                f"last year {p.get('seasonPointsPreviousYear', 0)}, {p['percentOwned']}% owned)"
+                f"last year {p.get('seasonPointsPreviousYear', 0)}, {p['percentOwned']}% owned{_injury_note(p)})"
                 for p in top
             )
             lines.append(f"  {position} ({len(players)} rostered): {names}")

@@ -4,9 +4,15 @@ Trade proposal deep agent.
 
 Usage:
     python trade_agent.py [--league ID --team ID] [--week N]
+    python trade_agent.py --play injury-hole --sell "Matthew Stafford" --for RB \
+        [--targets "Michelle,Jason,Adrianna"]
 
 With no --league/--team, runs against every LEAGUE_<N>_ID / LEAGUE_<N>_TEAM_ID
 pair found in .env.
+
+--play runs a named, targeted trade play (see PLAYS below) instead of the open
+league-wide scan. --targets matches owner first/full names or team names; if
+omitted, the play finds its own targets.
 
 See CLAUDE.md at the repo root for when this agent should be run.
 """
@@ -107,6 +113,42 @@ Repeat the "TRADE OPTION" block for each proposal. If no team in the OTHER TEAMS
 with a value-balanced fit, say so explicitly instead of inventing a partner or forcing a lopsided \
 deal."""
 
+# Named, targeted trade plays. Each is appended to SYSTEM_PROMPT when chosen
+# with --play, and narrows the open league-wide scan above to one specific
+# move the user wants to make. {sell}/{want}/{targets} are filled from the CLI.
+PLAYS: dict[str, str] = {
+    "injury-hole": """
+
+ACTIVE PLAY — SELL INTO AN INJURY HOLE: the user wants to trade {sell} (a player at a position where \
+they already have another starter) for a {want}, to a team whose own starter at {sell}'s position is \
+hurt. That team's need is acute and time-sensitive, which is the user's leverage — sell at peak demand. \
+This play replaces steps 1-3 of the PROCESS above: {want} is the weakness, {sell} is the trade capital, \
+and the partner list is: {targets}. Step 4's value check and every rule under it still apply.
+
+For the user's side, first confirm {sell} really is surplus: name the starter he sits behind, that \
+starter's bye week, and what the user's fallback would be at that position after the trade (another \
+rostered player or the best streamer from get_available_players). Say plainly if selling leaves a hole.
+
+For EACH partner team:
+1. Confirm the injury: name their hurt starter at {sell}'s position, his ESPN injury tag, and his \
+expected return timeline (web search for the latest news). A 1-2 week absence makes {sell} a short-term \
+rental to them — lower the ask and say so; a multi-week or season-ending absence raises it.
+2. Name their healthy fallback at that position and compare his numbers to {sell}'s. That gap is the \
+leverage: grade it HIGH / MEDIUM / LOW. If their fallback is roughly as good as {sell}, say so — there's \
+no real hole and no trade to force.
+3. Call get_team_roster on that team to see its full {want} room (get_other_teams shows only the top 3 \
+per position). Target {want}s they can spare without gutting their own lineup.
+4. Offer up to three packages, escalating: (a) a fair 1-for-1; (b) a stretch ask for a better {want}, \
+balanced with one of the user's bench pieces if needed; (c) a 2-for-2 or 2-for-1 if that's what makes \
+value line up. Skip any tier that can't pass the value check rather than padding the list.
+
+RESPONSE FORMAT for this play: before each team's TRADE OPTION blocks, add
+"TARGET: [Team Name] (Team ID [N], owner [name]) — INJURED STARTER: [player, tag, timeline] — \
+THEIR FALLBACK: [player, numbers] — LEVERAGE: [HIGH/MEDIUM/LOW, one-line why]"
+then the usual TRADE OPTION blocks (TRADE OPTION [team]-a/b/c). End with a one-paragraph RANKING of \
+which offer to send first and why.""",
+}
+
 
 def build_tools(league_id: str, team_id: str):
     @tool
@@ -140,16 +182,53 @@ def build_tools(league_id: str, team_id: str):
             by_position.setdefault(p.position, []).append(p.to_dict())
         return format_available_players(by_position)
 
-    return [get_my_roster, get_other_teams, get_available_players]
+    @tool
+    def get_team_roster(other_team_id: int) -> str:
+        """Get one other team's FULL roster (every starter/bench/IR player, injury tags, weekly points), by ESPN Team ID."""
+        try:
+            roster = espn.get_team_roster(league_id, str(other_team_id)).to_dict()
+        except ESPNServiceError as exc:
+            return f"ERROR: {exc}"
+        return format_roster(roster)
+
+    return [get_my_roster, get_other_teams, get_available_players, get_team_roster]
 
 
-def run(league_id: str, team_id: str, league_name: str, week: int) -> str:
+def resolve_targets(league_id: str, names: list[str]) -> list[dict]:
+    """Match each --targets name against owner first/full names and team names."""
+    teams = espn.get_league_rosters(league_id)
+    matched = []
+    for name in names:
+        needle = name.strip().lower()
+        hits = [
+            t for t in teams
+            if needle in t["teamName"].lower()
+            or any(needle == owner.lower() or needle == owner.split()[0].lower() for owner in t.get("ownerNames", []))
+        ]
+        if len(hits) != 1:
+            known = "; ".join(f"{t['teamName']} ({', '.join(t.get('ownerNames', []))})" for t in teams)
+            raise SystemExit(f"--targets: '{name}' matched {len(hits)} teams, need exactly 1. Teams: {known}")
+        matched.append(hits[0])
+    return matched
+
+
+def run(league_id: str, team_id: str, league_name: str, week: int, play: dict | None = None) -> str:
     tools = build_tools(league_id, team_id)
-    agent = create_deep_agent(model=get_model(), tools=tools, system_prompt=build_system_prompt(SYSTEM_PROMPT), name="trade_agent")
+    system_prompt = SYSTEM_PROMPT
     task = (
         f"Evaluate trade opportunities for my team (ESPN Team ID {team_id}) in \"{league_name}\", "
         f"week {week}. Start by calling get_my_roster and get_other_teams."
     )
+    if play:
+        if play["targets"]:
+            targets = ", ".join(
+                f"\"{t['teamName']}\" (Team ID {t['teamId']}, owner {' & '.join(t.get('ownerNames', []))})" for t in play["targets"]
+            )
+        else:
+            targets = f"every other team whose starter at {play['sell']}'s position carries a non-ACTIVE injury tag in get_other_teams"
+        system_prompt += PLAYS[play["name"]].format(sell=play["sell"], want=play["want"], targets=targets)
+        task += f" Run the {play['name']} play: trade {play['sell']} for a {play['want']}, targeting {targets}."
+    agent = create_deep_agent(model=get_model(), tools=tools, system_prompt=build_system_prompt(system_prompt), name="trade_agent")
     result = agent.invoke({"messages": [{"role": "user", "content": task}]})
     return result["messages"][-1].content
 
@@ -159,14 +238,24 @@ def main() -> None:
     parser.add_argument("--league", help="ESPN league ID (overrides .env)")
     parser.add_argument("--team", help="ESPN team ID (overrides .env)")
     parser.add_argument("--week", type=int, help="NFL week (defaults to the current week)")
+    parser.add_argument("--play", choices=sorted(PLAYS), help="Run a named, targeted trade play instead of the open scan")
+    parser.add_argument("--sell", help="--play: the player you want to trade away, e.g. \"Matthew Stafford\"")
+    parser.add_argument("--for", dest="want", help="--play: the position you want back, e.g. RB")
+    parser.add_argument("--targets", help="--play: comma-separated owner names or team names to target")
     args = parser.parse_args()
+    if args.play and not (args.sell and args.want):
+        parser.error("--play needs --sell and --for")
 
     leagues = resolve_leagues(args.league, args.team)
     week = args.week or espn.get_current_week(leagues[0]["leagueId"])
 
     for league in leagues:
+        play = None
+        if args.play:
+            targets = resolve_targets(league["leagueId"], args.targets.split(",")) if args.targets else []
+            play = {"name": args.play, "sell": args.sell, "want": args.want.upper(), "targets": targets}
         print_header("TRADE AGENT", league["name"], week)
-        output = run(league["leagueId"], league["teamId"], league["name"], week)
+        output = run(league["leagueId"], league["teamId"], league["name"], week, play)
         print(output)
 
 

@@ -21,6 +21,9 @@ cp .env.example .env   # fill in ESPN cookies, league id(s), OpenRouter key
 python trade_agent.py                       # all leagues from .env
 python waiver_agent.py --league 12345 --team 3
 python lineup_agent.py --week 6
+
+# targeted trade play: sell a surplus QB to teams with an injured QB, for an RB
+python trade_agent.py --play injury-hole --sell "Matthew Stafford" --for RB --targets "Michelle,Jason,Adrianna"
 ```
 
 Each agent prints its recommendation to stdout. See the root `CLAUDE.md`

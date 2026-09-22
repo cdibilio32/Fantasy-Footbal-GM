@@ -81,6 +81,19 @@ Run when:
   rebuilder read.
 - The user directly asks for trade ideas, or to evaluate a specific trade.
 
+#### Trade plays (`--play`)
+
+Targeted moves the user already has in mind, instead of the open league-wide scan:
+
+| Play | Use when | Example |
+|---|---|---|
+| `injury-hole` | You have a surplus starter at a position and league-mates just lost *their* starter there to injury — sell at peak demand for a position you need | `python trade_agent.py --play injury-hole --sell "Matthew Stafford" --for RB --targets "Michelle,Jason,Adrianna"` |
+
+`--targets` matches owner first/full names or team names (must hit exactly one
+team each). Leave it off and the play targets every team whose starter at the
+sold player's position has a non-ACTIVE injury tag. Add new plays to `PLAYS`
+in `trade_agent.py`.
+
 Don't run it once the league's trade deadline has passed for the season.
 
 ### `waiver_agent.py` — waiver-wire proposals

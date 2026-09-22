@@ -395,9 +395,14 @@ class ESPNService:
         """
         Every team's roster in the league (season point totals, not weekly),
         for identifying real trade partners/players instead of hypothetical ones.
+        Each team also carries its owners' names, and each player his injury tag.
         """
         current_week = self.get_current_week(league_id)
         data = self._get(str(league_id), params={"view": ["mRoster", "mTeam"], "scoringPeriodId": current_week})
+        member_names = {
+            m.get("id"): " ".join(filter(None, [m.get("firstName"), m.get("lastName")])) or m.get("displayName", "")
+            for m in data.get("members", [])
+        }
 
         results = []
         for team in data.get("teams", []):
@@ -432,11 +437,20 @@ class ESPNService:
                     "seasonPointsToDate": round(to_date_stat.get("appliedTotal", 0.0) if to_date_stat else 0.0, 1),
                     "seasonPointsPreviousYear": round(previous_year_stat.get("appliedTotal", 0.0) if previous_year_stat else 0.0, 1),
                     "percentOwned": round((player_data.get("ownership") or {}).get("percentOwned", 0.0)),
+                    "injuryStatus": player_data.get("injuryStatus"),
                 }
                 slot_id = entry.get("lineupSlotId")
                 (starters if _is_starting_slot(slot_id) else bench).append(row)
 
-            results.append({"teamId": team.get("id"), "teamName": team.get("name", f"Team {team.get('id')}"), "starters": starters, "bench": bench})
+            results.append(
+                {
+                    "teamId": team.get("id"),
+                    "teamName": team.get("name", f"Team {team.get('id')}"),
+                    "ownerNames": [member_names[o] for o in team.get("owners", []) if member_names.get(o)],
+                    "starters": starters,
+                    "bench": bench,
+                }
+            )
         return results
 
     # -- ENDPOINT: waiver wire / free agents ------------------------------------
