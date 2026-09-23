@@ -355,6 +355,18 @@ class ESPNService:
             "teams": [{"id": t.get("id"), "name": t.get("name")} for t in data.get("teams", [])],
         }
 
+    # -- ENDPOINT: starting lineup slots -----------------------------------------
+
+    def get_lineup_slots(self, league_id: str) -> dict[str, int]:
+        """The league's starting lineup, as {slot name: count} (e.g. {"QB": 1, "RB": 2, "FLEX": 1}); bench/IR excluded."""
+        data = self._get(str(league_id), params={"view": "mSettings"})
+        counts = ((data.get("settings") or {}).get("rosterSettings") or {}).get("lineupSlotCounts", {})
+        return {
+            LINEUP_SLOT_NAMES[int(slot_id)]: count
+            for slot_id, count in counts.items()
+            if count and _is_starting_slot(int(slot_id))
+        }
+
     # -- ENDPOINT: my team's roster --------------------------------------------
 
     def get_team_roster(self, league_id: str, team_id: str) -> TeamRoster:
@@ -525,7 +537,7 @@ espn = ESPNService()
 # Which endpoints each of the 3 deep agents actually calls — see common.py's
 # build_espn_tools(), which reads this map to attach only the relevant tools.
 AGENT_ENDPOINTS: dict[str, list[str]] = {
-    "trade": ["get_league_info", "get_team_roster", "get_league_rosters", "get_available_players"],
+    "trade": ["get_league_info", "get_team_roster", "get_league_rosters", "get_available_players", "get_lineup_slots"],
     "waiver": ["get_league_info", "get_my_roster_with_top_waivers"],
     "lineup": ["get_league_info", "get_team_roster", "get_matchups"],
 }

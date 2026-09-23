@@ -17,7 +17,9 @@ Flow:
      sub-agent per other team (or per --targets team), in parallel. Each
      sub-agent sees the brief, the user's roster, and that one team's full
      roster, and reports whether there's a trade with that team, what it is,
-     and why.
+     and why. Every trade must pass check_lineup_impact (both teams' best
+     starting lineups project higher this week) and must not have the user
+     giving more value than they get.
   3. The main agent ranks every opportunity the sub-agents found and returns
      the ranked list to the user.
 
@@ -36,7 +38,8 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from deepagents import create_deep_agent
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain.agents import create_agent
+from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 
 from common import build_system_prompt, format_available_players, format_roster, get_model, print_header, resolve_leagues
@@ -87,10 +90,11 @@ Then call evaluate_trade_partners ONCE, passing the full brief. Do not propose t
 PHASE 2 — RANK. The tool returns one report per team, each from a sub-agent that saw your brief, the user's \
 roster, and that team's full roster. Then:
 - Discard any proposed trade that breaks the rules: a player not on that team's roster, a free agent, a draft \
-pick, or a clearly lopsided value gap. Say briefly what you discarded and why.
-- Rank the rest, best first, by: how much it fixes the user's most urgent weakness; how likely the other \
-manager is to accept (value balance, how acute their need is); risk (injury, role security); and fit with \
-contender/rebuilder context.
+pick, a failed or missing lineup check (BOTH teams' starting lineups must project higher this week), or the \
+user giving more value than they get back. Say briefly what you discarded and why.
+- Rank the rest, best first, by: how much it fixes the user's most urgent weakness; how little the user gives \
+up (prefer the cheapest trade that does the job); how likely the other manager is to accept (their lineup gain, \
+how acute their need is); risk (injury, role security); and fit with contender/rebuilder context.
 - If the same player of the user's appears in trades with different teams, say those are either/or.
 - A report that starts with ERROR means that team wasn't evaluated — list it as such, don't guess.
 
@@ -98,9 +102,10 @@ FINAL RESPONSE FORMAT:
 "RANKED TRADE OPPORTUNITIES
 #[N] — [Team Name] (Team ID [N], owner [name]): TRADE [Your Player(s)] for [Their Player(s)]
   NUMBERS: [each player: pts to date / this week proj / season proj]
+  LINEUP IMPACT: [your starting lineup before → after; theirs before → after]
   WHY IT WORKS FOR BOTH SIDES: [your side's gain] / [their side's gain, tied to their actual roster]
   RISK: [the single biggest risk in this deal]
-  HOW TO PITCH IT: [the offer to send first, and the counter to hold back if the sub-agent found more than one package]
+  HOW TO PITCH IT: [the opening offer to send first, and the walk-away offer — the most to give — if the sub-agent found one. Never suggest going past it.]
 
 NO OPPORTUNITY
 [Team Name] (owner [name]) — [one-line reason]"
@@ -128,16 +133,22 @@ tag), web search his expected return. Compare their healthy fallback to the user
 user's leverage. A 1-2 week absence makes the user's player a short-term rental to them (lower the ask); a \
 multi-week or season-ending absence raises it. If their fallback is about as good as the user's player, there's \
 no real need. If only one side of the fit holds, there's no trade with this team — say so and stop.
-2. PROPOSE UP TO THREE TRADES, escalating: (a) a fair 1-for-1; (b) a stretch ask for a better player, balanced \
-with one of the user's bench pieces if needed; (c) a 2-for-2 or 2-for-1 if that's what makes value line up. \
-Skip any that fails the value check rather than padding the list. For each, run this value check — do not skip it:
-   a. State BOTH sides' actual numbers: points to date this season, this week's projection, and season-total \
-projection.
-   b. Reject any option where one side clearly gives up a far more valuable player (e.g. bench-caliber \
-production for a clear weekly starter at a scarce position). A team has no reason to accept a trade that plainly \
-downgrades them.
-   c. Name the specific player on the partner's roster that the user's piece would start over. If it wouldn't \
-crack their starting lineup, it isn't a real need for them — don't propose it.
+2. PROPOSE AT MOST TWO OPTIONS: (a) an OPENING OFFER that tilts slightly toward the user — the least the user \
+can reasonably give for what they want; and, only if it differs, (b) the WALK-AWAY OFFER — the most the user \
+should give, which is an even trade and never more. Skip (b) if (a) is already even. For each, run these checks \
+— do not skip them:
+   a. STARTING LINEUP CHECK: call check_lineup_impact with the exact player names. BOTH teams' best starting \
+lineups must project higher this week. If the tool says FAILS, rework the trade or drop it — never propose a \
+trade that fails it. If it notes a side doesn't go up on the season-rate lens, say so: that side is only \
+getting a short-term gain.
+   b. DON'T OVERPAY: state BOTH sides' actual numbers (points to date this season, this week's projection, \
+season-total projection) and value over the brief's replacement level. The user must NOT give more value than \
+they get back. Don't add sweeteners (extra players) to get a deal done, don't propose 2-for-1s where the user \
+gives the two, and don't give up a starter for a bench piece. When the partner's need is acute (e.g. their \
+starter is hurt with a weak fallback), that's leverage: use it to ask for more, never to justify giving more. \
+If the partner won't plausibly accept an even trade, there's no trade — say so rather than raising the offer.
+   c. Name the specific player on the partner's roster that the user's piece would start over (the lineup \
+check shows it). If it wouldn't crack their starting lineup, it isn't a real need for them — don't propose it.
 
 Within every proposal, still apply:
 - A replacement-level (VORP) lens, not raw points: a player's value is how far he beats the brief's \
@@ -153,8 +164,9 @@ output as skill).
 
 RESPONSE FORMAT: start with one line saying whether there's a trade opportunity with this team. Then, for each \
 proposal:
-"TRADE OPTION [a/b/c] — TRADE [User's Player] ([Position], pts to date: [X], this week proj: [Y], season proj: [Z]) for [Their Player] ([Position], pts to date: [X], this week proj: [Y], season proj: [Z])
-VALUE CHECK: [the gap between the two sides — confirm it's close enough that the partner would realistically accept]
+"[OPENING OFFER / WALK-AWAY OFFER] — TRADE [User's Player] ([Position], pts to date: [X], this week proj: [Y], season proj: [Z]) for [Their Player] ([Position], pts to date: [X], this week proj: [Y], season proj: [Z])
+LINEUP IMPACT: [user's lineup before → after, partner's lineup before → after, from check_lineup_impact]
+VALUE CHECK: [the value gap — confirm the user isn't giving more than they get, and why the partner would still accept]
 REPLACES: [the player on the partner's roster the user's piece would start over]
 WHY IT WORKS FOR BOTH SIDES: [user's gain] / [partner's gain, tied to their actual roster]
 RISK: [the single biggest risk-adjustment factor in this deal]"
@@ -163,50 +175,148 @@ If there's no trade, explain why in two or three sentences instead — which sid
 numbers behind it."""
 
 
+# Which player positions can fill each starting slot. A slot not listed here is
+# a dedicated slot, filled only by the position of the same name (QB, RB, K...).
+FLEX_SLOTS: dict[str, set[str]] = {
+    "RB/WR": {"RB", "WR"},
+    "WR/TE": {"WR", "TE"},
+    "FLEX": {"RB", "WR", "TE"},
+    "OP": {"QB", "RB", "WR", "TE"},
+    "SUPER_FLEX": {"QB", "RB", "WR", "TE"},
+}
+# Players with these tags are counted as 0 for this week's projection.
+UNAVAILABLE_TAGS = {"OUT", "DOUBTFUL", "INJURY_RESERVE", "SUSPENSION"}
+SEASON_GAMES = 17
+
+
+def this_week_value(p: dict) -> float:
+    return 0.0 if (p.get("injuryStatus") or "").upper() in UNAVAILABLE_TAGS else p.get("projectedPoints", 0.0)
+
+
+def season_rate_value(p: dict) -> float:
+    return p.get("seasonProjectedPoints", 0.0) / SEASON_GAMES
+
+
+def best_lineup(players: list[dict], slots: dict[str, int], value) -> tuple[float, dict[str, str]]:
+    """
+    The highest-projected starting lineup a roster can field: dedicated slots
+    first, then flex slots from whoever's left. Returns (total, {player: slot}).
+    """
+    pool = sorted(players, key=value, reverse=True)
+    used: set[str] = set()
+    lineup: dict[str, str] = {}
+    ordered = [s for s in slots if s not in FLEX_SLOTS] + [s for s in FLEX_SLOTS if s in slots]
+    for slot in ordered:
+        eligible = FLEX_SLOTS.get(slot, {slot})
+        for _ in range(slots[slot]):
+            pick = next((p for p in pool if p["fullName"] not in used and p["position"] in eligible), None)
+            if pick:
+                used.add(pick["fullName"])
+                lineup[pick["fullName"]] = slot
+    return round(sum(value(p) for p in players if p["fullName"] in lineup), 1), lineup
+
+
+def all_players(roster: dict) -> list[dict]:
+    return roster["starters"] + roster["bench"] + roster["injuredReserve"]
+
+
+def lineup_change(before: dict[str, str], after: dict[str, str]) -> str:
+    joined = [f"{name} ({slot})" for name, slot in after.items() if name not in before]
+    left = [name for name in before if name not in after]
+    if not joined and not left:
+        return "no change to the starting lineup"
+    return f"starts {', '.join(joined) or 'nobody new'}; no longer starts {', '.join(left) or 'nobody'}"
+
+
+def lineup_impact(my_roster: dict, partner_roster: dict, slots: dict[str, int], user_gives: list[str], user_gets: list[str]) -> str:
+    """Before/after starting-lineup projections for both teams if the user gives `user_gives` for `user_gets`."""
+    mine = {p["fullName"].lower(): p for p in all_players(my_roster)}
+    theirs = {p["fullName"].lower(): p for p in all_players(partner_roster)}
+    missing = [n for n in user_gives if n.lower() not in mine] + [n for n in user_gets if n.lower() not in theirs]
+    if missing:
+        return f"ERROR: not found on the right roster: {', '.join(missing)}. Copy names exactly as listed (user_gives from the user's roster, user_gets from the partner's)."
+
+    gives = [mine[n.lower()] for n in user_gives]
+    gets = [theirs[n.lower()] for n in user_gets]
+    my_after = [p for p in mine.values() if p not in gives] + gets
+    their_after = [p for p in theirs.values() if p not in gets] + gives
+
+    lines, verdicts = [], []
+    for lens, value in (("THIS WEEK (ESPN weekly projection; OUT/DOUBTFUL/IR count as 0)", this_week_value),
+                        ("SEASON RATE (season projection ÷ 17; ignores this week's injuries)", season_rate_value)):
+        lines.append(lens)
+        for side, before_players, after_players in (("User", list(mine.values()), my_after), ("Partner", list(theirs.values()), their_after)):
+            before_total, before_lineup = best_lineup(before_players, slots, value)
+            after_total, after_lineup = best_lineup(after_players, slots, value)
+            delta = round(after_total - before_total, 1)
+            lines.append(f"  {side}: {before_total} → {after_total} ({delta:+}) — {lineup_change(before_lineup, after_lineup)}")
+            verdicts.append((lens.split(" (")[0], side, delta))
+    this_week = [v for v in verdicts if v[0] == "THIS WEEK"]
+    if all(delta > 0 for _, _, delta in this_week):
+        lines.append("RESULT: both starting lineups project higher this week.")
+    else:
+        worse = " and ".join(side for _, side, delta in this_week if delta <= 0)
+        lines.append(f"RESULT: FAILS — {worse} starting lineup doesn't project higher this week. Don't propose this trade.")
+    season_worse = [side for lens, side, delta in verdicts if lens == "SEASON RATE" and delta <= 0]
+    if season_worse:
+        lines.append(f"NOTE: {' and '.join(season_worse)} lineup doesn't go up on the season-rate lens — for that side it's a short-term gain only; say so.")
+    return "\n".join(lines)
+
+
 def team_label(team: dict) -> str:
     owners = " & ".join(team.get("ownerNames", [])) or "unknown owner"
     return f"\"{team['teamName']}\" (Team ID {team['teamId']}, owner {owners})"
 
 
-def run_partner_subagent(brief: str, my_roster_text: str, partner: dict, partner_roster_text: str) -> str:
+def run_partner_subagent(brief: str, my_roster: dict, partner: dict, partner_roster: dict, slots: dict[str, int]) -> str:
     """
-    One partner sub-agent: a single model call (with OpenRouter's web plugin
-    for injury/role news) that evaluates a trade with one team. It needs no
-    tools — everything it needs is in its first message.
+    One partner sub-agent: evaluates a trade with one team. Everything it
+    needs is in its first message; its one tool, check_lineup_impact, checks
+    each candidate trade against both teams' best starting lineups. Web
+    search comes from OpenRouter's plugin.
     """
+
+    @tool
+    def check_lineup_impact(user_gives: list[str], user_gets: list[str]) -> str:
+        """Before/after projected starting-lineup totals for BOTH teams if the user trades user_gives (names from the user's roster) for user_gets (names from the partner's roster)."""
+        return lineup_impact(my_roster, partner_roster, slots, user_gives, user_gets)
+
     message = (
         f"LEAD ANALYST'S TRADE BRIEF:\n{brief}\n\n"
-        f"USER'S ROSTER:\n{my_roster_text}\n\n"
-        f"PARTNER TEAM: {team_label(partner)}\n{partner_roster_text}\n\n"
+        f"USER'S ROSTER:\n{format_roster(my_roster)}\n\n"
+        f"PARTNER TEAM: {team_label(partner)}\n{format_roster(partner_roster)}\n\n"
+        f"STARTING LINEUP SLOTS: {', '.join(f'{slot} x{n}' for slot, n in slots.items())}\n\n"
         "Is there a trade opportunity with this team? If so, what is it and why?"
     )
-    response = get_model().invoke(
-        [SystemMessage(content=build_system_prompt(PARTNER_PROMPT, tool_guardrail=False)), HumanMessage(content=message)]
+    agent = create_agent(
+        model=get_model(),
+        tools=[check_lineup_impact],
+        system_prompt=build_system_prompt(PARTNER_PROMPT, tool_guardrail=False),
     )
-    return response.content
+    result = agent.invoke({"messages": [HumanMessage(content=message)]})
+    return result["messages"][-1].content
 
 
-def build_main_tools(league_id: str, my_roster_text: str, partners: list[dict]):
+def build_main_tools(league_id: str, my_roster: dict, partners: list[dict]):
+    slots = espn.get_lineup_slots(league_id)
+
     @tool
     def evaluate_trade_partners(brief: str) -> str:
         """Send your full trade brief to one partner sub-agent per team. Returns each team's report: whether there's a trade, what it is, and why."""
-        rosters: dict[int, str] = {}
+        rosters: dict[int, dict | str] = {}
         for team in partners:
             try:
-                rosters[team["teamId"]] = format_roster(espn.get_team_roster(league_id, str(team["teamId"])).to_dict())
+                rosters[team["teamId"]] = espn.get_team_roster(league_id, str(team["teamId"])).to_dict()
             except ESPNServiceError as exc:
-                rosters[team["teamId"]] = f"ERROR: {exc}"
+                rosters[team["teamId"]] = f"ERROR: couldn't load roster — {exc}"
 
-        reports: dict[int, str] = {}
+        reports: dict[int, str] = {t["teamId"]: r for t in partners if isinstance(r := rosters[t["teamId"]], str)}
         with ThreadPoolExecutor(max_workers=SUBAGENT_CONCURRENCY) as pool:
             futures = {
-                pool.submit(run_partner_subagent, brief, my_roster_text, team, rosters[team["teamId"]]): team
+                pool.submit(run_partner_subagent, brief, my_roster, team, rosters[team["teamId"]], slots): team
                 for team in partners
-                if not rosters[team["teamId"]].startswith("ERROR")
+                if team["teamId"] not in reports
             }
-            for team in partners:
-                if rosters[team["teamId"]].startswith("ERROR"):
-                    reports[team["teamId"]] = f"ERROR: couldn't load roster — {rosters[team['teamId']]}"
             for future in as_completed(futures):
                 team = futures[future]
                 try:
@@ -238,7 +348,7 @@ def resolve_targets(teams: list[dict], names: list[str]) -> list[dict]:
 
 
 def run(league_id: str, team_id: str, league_name: str, week: int, ask: str | None = None, targets: list[str] | None = None) -> str:
-    my_roster_text = format_roster(espn.get_team_roster(league_id, team_id).to_dict())
+    my_roster = espn.get_team_roster(league_id, team_id).to_dict()
 
     by_position: dict[str, list[dict]] = {}
     for p in sorted(espn.get_available_players(league_id), key=lambda p: p.projected_points, reverse=True):
@@ -251,7 +361,7 @@ def run(league_id: str, team_id: str, league_name: str, week: int, ask: str | No
 
     task = (
         f"My team is ESPN Team ID {team_id} in \"{league_name}\", week {week}.\n\n"
-        f"MY ROSTER:\n{my_roster_text}\n\n"
+        f"MY ROSTER:\n{format_roster(my_roster)}\n\n"
         f"{format_available_players(by_position)}\n\n"
         f"TEAMS THE PARTNER SUB-AGENTS WILL EVALUATE: {', '.join(team_label(t) for t in partners)}"
     )
@@ -260,7 +370,7 @@ def run(league_id: str, team_id: str, league_name: str, week: int, ask: str | No
 
     agent = create_deep_agent(
         model=get_model(),
-        tools=build_main_tools(league_id, my_roster_text, partners),
+        tools=build_main_tools(league_id, my_roster, partners),
         system_prompt=build_system_prompt(MAIN_PROMPT),
         name="trade_agent",
     )

@@ -89,11 +89,23 @@ Run when:
    keep, and replacement level per position.
 2. It calls its one tool, `evaluate_trade_partners(brief)`, which runs one
    **partner sub-agent** (`PARTNER_PROMPT`) per other team in parallel
-   (`TRADE_SUBAGENT_CONCURRENCY`, default 4). Each is a single model call with
-   web search and no tools: it sees the brief, your roster and that team's
-   full roster, and says whether there's a trade, what it is, and why.
+   (`TRADE_SUBAGENT_CONCURRENCY`, default 4). Each sees the brief, your roster
+   and that team's full roster, uses web search, and says whether there's a
+   trade, what it is, and why. Its one tool, `check_lineup_impact`, computes
+   both teams' best starting lineup (from the league's `get_lineup_slots`)
+   before and after a trade.
 3. The main agent ranks every opportunity and returns the ranked list, plus a
    one-line reason for each team with no opportunity.
+
+Two hard rules on every proposed trade:
+- **Both starting lineups must project higher this week** (ESPN weekly
+  projections; OUT/DOUBTFUL/IR players count as 0). It's checked in code by
+  `check_lineup_impact`, not by the model's arithmetic. It also reports a
+  season-rate lens (season projection ÷ 17), so a gain for this week only is
+  called out.
+- **Don't overpay**: at most an opening offer tilted toward you plus an even
+  walk-away offer. No sweeteners, no giving two players for one, and a
+  partner's injury is leverage to ask for more, never a reason to give more.
 
 Optional flags:
 - `--ask "Sell Matthew Stafford for an RB"` — a specific request, folded into
@@ -143,6 +155,7 @@ Auth is two cookies from a browser logged into fantasy.espn.com
 | `get_my_roster_with_top_waivers(league_id, team_id)` | Own roster + top free agents per position | waiver |
 | `get_matchups(league_id, week)` | That week's matchup schedule | lineup |
 | `get_transactions(league_id)` | Recent adds/drops/trades | (available, currently unused by any agent) |
+| `get_lineup_slots(league_id)` | The league's starting lineup slots and counts (e.g. QB 1, RB 2, FLEX 1) | trade |
 | `get_current_week(league_id)` | ESPN's own current scoring period (asks ESPN directly; not calendar-guessed) | all |
 
 Every player returned by `get_team_roster` / `get_available_players` / `get_my_roster_with_top_waivers`
